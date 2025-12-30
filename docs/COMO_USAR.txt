@@ -1,0 +1,56 @@
+╔══════════════════════════════════════════════════════════════╗
+║          CÓMO USAR LA APLICACIÓN CORRECTAMENTE              ║
+╚══════════════════════════════════════════════════════════════╝
+
+⚠️  IMPORTANTE: NO abras el archivo index.html directamente
+
+✅ FORMA CORRECTA:
+
+1. Abre una terminal PowerShell en esta carpeta
+2. Ejecuta: npm start
+3. Espera a que veas el mensaje:
+   "🎰 Servidor de Validador de Tiquetes iniciado"
+4. Abre tu navegador en: http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ FORMA INCORRECTA (NO FUNCIONA):
+
+- NO hacer doble clic en index.html
+- NO abrir con file:///C:/Users/...
+- Los botones de "Cargar Resultados" NO funcionarán
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 SOLUCIÓN DE PROBLEMAS:
+
+Si los botones no responden:
+1. Verifica que el servidor esté ejecutándose (npm start)
+2. Asegúrate de acceder a http://localhost:3000
+3. Abre la consola del navegador (F12) para ver errores
+4. Si ves "CORS error" o "Failed to fetch", estás abriendo 
+   el archivo directamente. Ciérralo y usa http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 COMANDOS ÚTILES:
+
+Instalar dependencias (primera vez):
+> npm install
+
+Iniciar servidor:
+> npm start
+
+Detener servidor:
+> Ctrl + C (en la terminal)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ FUNCIONALIDADES:
+
+✅ Baloto: Carga automática desde API oficial
+✅ Miloto: Scraping automático (requiere servidor)
+✅ Colorloto: Scraping automático (requiere servidor)
+
+Todas las funcionalidades requieren que el servidor esté 
+ejecutándose y accedas a través de http://localhost:3000

@@ -1,0 +1,30 @@
+{
+  "name": "validador-tiquetes-baloto",
+  "version": "1.0.0",
+  "description": "Aplicación web para validar tiquetes de Baloto, Miloto y Colorloto con scraping automático de resultados",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node tests/test-endpoints.js"
+  },
+  "keywords": [
+    "baloto",
+    "miloto",
+    "colorloto",
+    "loteria",
+    "colombia",
+    "scraping"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Validador de Tiquetes - Baloto, Miloto y Colorloto</title>
+        <meta
+            name="description"
+            content="Valida tus tiquetes de lotería Baloto, Miloto y Colorloto con resultados oficiales en tiempo real"
+        />
+        <link rel="stylesheet" href="css/styles.css" />
+    </head>
+    <body>
+        <!-- Skip to content (accesibilidad) -->
+        <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+        <!-- Botón de Dark Mode Toggle - FASE 3 -->
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema oscuro/claro" title="Cambiar tema">
+            <span class="sun-icon" aria-hidden="true">☀️</span>
+            <span class="moon-icon" aria-hidden="true">🌙</span>
+        </button>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="toast-container" role="alert" aria-live="polite"></div>
+
+        <div class="container" id="main-content">
+            <header>
+                <h1>🎰 Validador de Tiquetes</h1>
+                <p>Valida tus tiquetes de Baloto, Miloto y Colorloto</p>
+            </header>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-button active" data-tab="baloto">Baloto</button>
+                <button class="tab-button" data-tab="baloto-revancha">Baloto Revancha</button>
+                <button class="tab-button" data-tab="miloto">Miloto</button>
+                <button class="tab-button" data-tab="colorloto">Colorloto</button>
+            </div>
+
+            <!-- Baloto Section -->
+            <div id="baloto" class="tab-content active">
+                <div class="section">
+                    <h2>
+                        Baloto
+                        <span class="tooltip" tabindex="0">
+                            <span class="tooltip-icon" aria-label="Información sobre Baloto">?</span>
+                            <span class="tooltip-text">5 números del 1-43 + Super Balota 1-16</span>
+                        </span>
+                    </h2>
+                    <p class="description">Ingresa los 5 números principales (1-43) y el Súper Balota (1-16)</p>
+
+                    <div class="input-section">
+                        <h3>Tus Números</h3>
+                        <div class="numbers-input">
+                            <input
+                                type="number"
+                                class="number-input baloto-number"
+                                min="1"
+                                max="43"
+                                placeholder="N1"
+                                aria-label="Número 1 de Baloto"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-number"
+                                min="1"
+                                max="43"
+                                placeholder="N2"
+                                aria-label="Número 2 de Baloto"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-number"
+                                min="1"
+                                max="43"
+                                placeholder="N3"
+                                aria-label="Número 3 de Baloto"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-number"
+                                min="1"
+                                max="43"
+                                placeholder="N4"
+                                aria-label="Número 4 de Baloto"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-number"
+                                min="1"
+                                max="43"
+                                placeholder="N5"
+                                aria-label="Número 5 de Baloto"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-super"
+                                min="1"
+                                max="16"
+                                placeholder="SB"
+                                aria-label="Súper Balota"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <h3>Resultados del Sorteo</h3>
+                        <div class="api-buttons">
+                            <button
+                                class="btn-api"
+                                onclick="loadLatestBalotoResults()"
+                                aria-label="Cargar últimos resultados oficiales de Baloto"
+                            >
+                                🌐 Cargar Últimos Resultados Oficiales
+                            </button>
+                            <button
+                                class="btn-secondary"
+                                onclick="generateRandomBaloto()"
+                                aria-label="Generar números aleatorios para prueba"
+                            >
+                                Generar Resultados Aleatorios
+                            </button>
+                        </div>
+                        <p id="sorteo-info" class="sorteo-info"></p>
+                        <div class="numbers-input">
+                            <input
+                                type="number"
+                                class="number-input baloto-result"
+                                min="1"
+                                max="43"
+                                placeholder="N1"
+                                aria-label="Resultado número 1"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-result"
+                                min="1"
+                                max="43"
+                                placeholder="N2"
+                                aria-label="Resultado número 2"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-result"
+                                min="1"
+                                max="43"
+                                placeholder="N3"
+                                aria-label="Resultado número 3"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-result"
+                                min="1"
+                                max="43"
+                                placeholder="N4"
+                                aria-label="Resultado número 4"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-result"
+                                min="1"
+                                max="43"
+                                placeholder="N5"
+                                aria-label="Resultado número 5"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-result-super"
+                                min="1"
+                                max="16"
+                                placeholder="SB"
+                                aria-label="Resultado Súper Balota"
+                            />
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" onclick="validateBaloto()" aria-label="Validar tu tiquete de Baloto">
+                        Validar Tiquete
+                    </button>
+
+                    <div id="baloto-result" class="result-container" role="region" aria-live="polite"></div>
+
+                    <!-- Botones Compartir - FASE 3 -->
+                    <div id="baloto-share" class="share-buttons" style="display: none"></div>
+                </div>
+            </div>
+
+            <!-- Baloto Revancha Section -->
+            <div id="baloto-revancha" class="tab-content">
+                <div class="section">
+                    <h2>
+                        Baloto Revancha
+                        <span class="tooltip" tabindex="0">
+                            <span class="tooltip-icon" aria-label="Información sobre Baloto Revancha">?</span>
+                            <span class="tooltip-text">5 números del 1-43 + Super Balota 1-16 (Sorteo adicional)</span>
+                        </span>
+                    </h2>
+                    <p class="description">
+                        Ingresa los 5 números principales (1-43) y el Súper Balota (1-16) del sorteo de Revancha
+                    </p>
+
+                    <div class="input-section">
+                        <h3>Tus Números</h3>
+                        <div class="numbers-input">
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-number"
+                                min="1"
+                                max="43"
+                                placeholder="N1"
+                                aria-label="Tu número 1"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-number"
+                                min="1"
+                                max="43"
+                                placeholder="N2"
+                                aria-label="Tu número 2"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-number"
+                                min="1"
+                                max="43"
+                                placeholder="N3"
+                                aria-label="Tu número 3"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-number"
+                                min="1"
+                                max="43"
+                                placeholder="N4"
+                                aria-label="Tu número 4"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-number"
+                                min="1"
+                                max="43"
+                                placeholder="N5"
+                                aria-label="Tu número 5"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-super"
+                                min="1"
+                                max="16"
+                                placeholder="SB"
+                                aria-label="Súper Balota"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <h3>Resultados del Sorteo</h3>
+                        <div class="api-buttons">
+                            <button
+                                class="btn-api"
+                                onclick="loadLatestBalotoRevanchaResults()"
+                                aria-label="Cargar últimos resultados oficiales de Baloto Revancha"
+                            >
+                                🌐 Cargar Últimos Resultados Oficiales
+                            </button>
+                            <button
+                                class="btn-secondary"
+                                onclick="generateRandomBalotoRevancha()"
+                                aria-label="Generar números aleatorios para prueba"
+                            >
+                                Generar Resultados Aleatorios
+                            </button>
+                        </div>
+                        <p id="sorteo-revancha-info" class="sorteo-info"></p>
+                        <div class="numbers-input">
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result"
+                                min="1"
+                                max="43"
+                                placeholder="N1"
+                                aria-label="Resultado número 1"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result"
+                                min="1"
+                                max="43"
+                                placeholder="N2"
+                                aria-label="Resultado número 2"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result"
+                                min="1"
+                                max="43"
+                                placeholder="N3"
+                                aria-label="Resultado número 3"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result"
+                                min="1"
+                                max="43"
+                                placeholder="N4"
+                                aria-label="Resultado número 4"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result"
+                                min="1"
+                                max="43"
+                                placeholder="N5"
+                                aria-label="Resultado número 5"
+                            />
+                            <input
+                                type="number"
+                                class="number-input baloto-revancha-result-super"
+                                min="1"
+                                max="16"
+                                placeholder="SB"
+                                aria-label="Resultado Súper Balota"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        class="btn-primary"
+                        onclick="validateBalotoRevancha()"
+                        aria-label="Validar tu tiquete de Baloto Revancha"
+                    >
+                        Validar Tiquete
+                    </button>
+
+                    <div id="baloto-revancha-result" class="result-container" role="region" aria-live="polite"></div>
+
+                    <!-- Botones Compartir - FASE 3 -->
+                    <div id="baloto-revancha-share" class="share-buttons" style="display: none"></div>
+                </div>
+            </div>
+
+            <!-- Miloto Section -->
+            <div id="miloto" class="tab-content">
+                <div class="section">
+                    <h2>Miloto</h2>
+                    <p class="description">Elige 5 números de la suerte del 1 al 39</p>
+
+                    <div class="input-section">
+                        <h3>Tus Números</h3>
+                        <div class="numbers-input">
+                            <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N1" />
+                            <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N2" />
+                            <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N3" />
+                            <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N4" />
+                            <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N5" />
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <h3>Resultados del Sorteo</h3>
+                        <div class="api-buttons">
+                            <button class="btn-api" onclick="loadLatestMilotoResults()">
+                                🤖 Cargar Automáticamente (Scraping)
+                            </button>
+                            <a href="https://www.resultadobaloto.com/miloto.php" target="_blank" class="btn-link">
+                                🔗 Ver Resultados Oficiales de Miloto
+                            </a>
+                            <button class="btn-secondary" onclick="generateRandomMiloto()">
+                                Generar Resultados Aleatorios
+                            </button>
+                        </div>
+                        <p class="helper-text">💡 Usa carga automática si tienes el servidor ejecutándose</p>
+                        <div class="numbers-input">
+                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N1" />
+                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N2" />
+                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N3" />
+                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N4" />
+                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N5" />
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" onclick="validateMiloto()">Validar Tiquete</button>
+
+                    <div id="miloto-result" class="result-container"></div>
+
+                    <!-- Botones Compartir - FASE 3 -->
+                    <div id="miloto-share" class="share-buttons" style="display: none"></div>
+                </div>
+            </div>
+
+            <!-- Colorloto Section -->
+            <div id="colorloto" class="tab-content">
+                <div class="section">
+                    <h2>Colorloto</h2>
+                    <p class="description">Elige 6 colores y asigna a cada uno un número del 1 al 7</p>
+
+                    <div class="input-section">
+                        <h3>Tus Colores y Números</h3>
+                        <div class="colorloto-grid">
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="0">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="0"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="1">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="1"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="2">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="2"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="3">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="3"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="4">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="4"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto user-color" data-index="5">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small user-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="5"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <h3>Resultados del Sorteo</h3>
+                        <div class="api-buttons">
+                            <button class="btn-api" onclick="loadLatestColorlotoResults()">
+                                🤖 Cargar Automáticamente (Scraping)
+                            </button>
+                            <a href="https://www.resultadobaloto.com/colorloto.php" target="_blank" class="btn-link">
+                                🔗 Ver Resultados Oficiales de Colorloto
+                            </a>
+                            <button class="btn-secondary" onclick="generateRandomColorloto()">
+                                Generar Resultados Aleatorios
+                            </button>
+                        </div>
+                        <p class="helper-text">💡 Usa carga automática si tienes el servidor ejecutándose</p>
+                        <div class="colorloto-grid">
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="0">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="0"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="1">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="1"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="2">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="2"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="3">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="3"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="4">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="4"
+                                />
+                            </div>
+                            <div class="color-number-pair">
+                                <select class="color-select-colorloto result-color" data-index="5">
+                                    <option value="">Color</option>
+                                    <option value="amarillo">Amarillo</option>
+                                    <option value="azul">Azul</option>
+                                    <option value="rojo">Rojo</option>
+                                    <option value="verde">Verde</option>
+                                    <option value="blanco">Blanco</option>
+                                    <option value="negro">Negro</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    class="number-input-small result-number"
+                                    min="1"
+                                    max="7"
+                                    placeholder="1-7"
+                                    data-index="5"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" onclick="validateColorloto()">Validar Tiquete</button>
+
+                    <div id="colorloto-result" class="result-container"></div>
+
+                    <!-- Botones Compartir - FASE 3 -->
+                    <div id="colorloto-share" class="share-buttons" style="display: none"></div>
+                </div>
+            </div>
+
+            <footer>
+                <p>⚠️ Esta aplicación es solo para fines informativos. Verifica los resultados oficiales en:</p>
+                <div class="footer-links">
+                    <a href="https://baloto.com/" target="_blank" rel="noopener noreferrer">baloto.com</a> |
+                    <a href="https://www.resultadobaloto.com/" target="_blank" rel="noopener noreferrer"
+                        >resultadobaloto.com</a
+                    >
+                </div>
+            </footer>
+        </div>
+
+        <!-- Botón flotante de historial -->
+        <button
+            class="history-button"
+            onclick="openHistoryModal()"
+            aria-label="Ver historial de validaciones"
+            title="Historial"
+        >
+            📋
+            <span class="badge" id="history-count" style="display: none">0</span>
+        </button>
+
+        <!-- Modal de historial -->
+        <div class="modal-overlay" id="history-modal" onclick="closeHistoryModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>📋 Historial de Validaciones</h2>
+                    <button class="modal-close" onclick="closeHistoryModal()" aria-label="Cerrar modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="history-list"></div>
+                    <div class="empty-history" id="empty-history" style="display: none">
+                        <div class="empty-history-icon">📭</div>
+                        <p>No hay validaciones guardadas aún</p>
+                        <p style="font-size: 0.9rem; margin-top: 8px">
+                            Las validaciones que realices se guardarán aquí automáticamente
+                        </p>
+                    </div>
+                    <button class="btn-secondary" onclick="clearHistory()" style="margin-top: 16px; width: 100%">
+                        🗑️ Limpiar Historial
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/app.js"></script>
+    </body>
+</html>

@@ -1,0 +1,37 @@
+# .gitignore
+
+# Dependencias
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Variables de entorno
+.env
+.env.local
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de debug
+tests/baloto-panel-debug.html
+tests/*.html.backup
+
+# Build (si se agrega)
+dist/
+build/

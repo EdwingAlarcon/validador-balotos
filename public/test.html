@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+    <body>
+        <h1>Test Simple</h1>
+        <button onclick="alert('Funciona!')">Click me</button>
+        <button id="test2">Test 2</button>
+
+        <script>
+            console.log('Script cargado');
+            document.getElementById('test2').addEventListener('click', () => {
+                alert('Test 2 funciona!');
+            });
+        </script>
+    </body>
+</html>
