@@ -120,13 +120,53 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add active class to clicked tab and corresponding content
             button.classList.add('active');
             document.getElementById(tabName).classList.add('active');
+
+            // Guardar tab activo en localStorage
+            localStorage.setItem('activeTab', tabName);
+
+            // Auto-enfocar el primer input de la pestaña activa
+            setTimeout(() => {
+                const activeTab = document.getElementById(tabName);
+                const firstInput = activeTab?.querySelector('.number-input');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 100);
         });
     });
 
-    // Cerrar modal con tecla ESC
+    // Restaurar tab activo al cargar
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+        const tabButton = document.querySelector(`[data-tab="${savedTab}"]`);
+        if (tabButton) {
+            tabButton.click();
+        }
+    }
+
+    // Atajos de teclado globales
     document.addEventListener('keydown', e => {
+        // ESC: Cerrar modal
         if (e.key === 'Escape') {
             closeHistoryModal({ target: { classList: { contains: () => true } } });
+        }
+
+        // Ctrl+H: Abrir historial
+        if (e.ctrlKey && e.key === 'h') {
+            e.preventDefault();
+            openHistoryModal();
+        }
+
+        // Ctrl+D: Toggle dark mode
+        if (e.ctrlKey && e.key === 'd') {
+            e.preventDefault();
+            document.getElementById('themeToggle')?.click();
+        }
+
+        // Ctrl+L: Limpiar inputs
+        if (e.ctrlKey && e.key === 'l') {
+            e.preventDefault();
+            clearUserInputsWithConfirm();
         }
     });
 
@@ -653,11 +693,57 @@ function generateRandomColorloto() {
     }
 }
 
-// Validation functions
-function validateBaloto() {
-    const userNumbers = getInputValues('.baloto-number');
+// ========================================
+// LIMPIAR INPUTS DESPUÉS DE VALIDAR
+// ========================================
+function clearUserInputs() {
+    // Limpiar Baloto
+    document.querySelectorAll('.baloto-number, .baloto-super').forEach(input => {
+        input.value = '';
+        input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
+    });
 
-    // Obtener resultados desde las bolas visuales
+    // Limpiar Baloto Revancha
+    document.querySelectorAll('.baloto-revancha-number, .baloto-revancha-super').forEach(input => {
+        input.value = '';
+        input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
+    });
+
+    // Limpiar Miloto
+    document.querySelectorAll('.miloto-number').forEach(input => {
+        input.value = '';
+        input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
+    });
+
+    // Limpiar Colorloto
+    document.querySelectorAll('.user-number, .user-color').forEach(input => {
+        input.value = '';
+        input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
+    });
+}
+
+// Limpiar con confirmación (para botón manual)
+function clearUserInputsWithConfirm() {
+    // Verificar si hay algún input con valor
+    const hasValues =
+        document.querySelectorAll(
+            '.baloto-number, .baloto-super, .baloto-revancha-number, .baloto-revancha-super, .miloto-number, .user-number'
+        ).length > 0 &&
+        Array.from(
+            document.querySelectorAll(
+                '.baloto-number, .baloto-super, .baloto-revancha-number, .baloto-revancha-super, .miloto-number, .user-number'
+            )
+        ).some(input => input.value.trim() !== '');
+
+    if (!hasValues) {
+        Toast.info('No hay campos para limpiar', 2000);
+        return;
+    }
+
+    showConfirmModal('¿Limpiar todos los campos?', 'Se borrarán todos los números ingresados.', () => {
+        clearUserInputs();
+        Toast.success('Campos limpiados', 2000);
+    });
     const ballsDisplay = document.getElementById('baloto-results-display');
     const resultNumbers = [];
     let resultSuper = NaN;
@@ -1001,16 +1087,11 @@ function validateColorloto() {
         return;
     }
 
-    // Check for duplicate colors in user selection
-    if (new Set(userColors).size !== 6) {
-        Toast.warning('No puedes repetir colores en tu selección', 3000);
-        return;
-    }
-
-    // Check for duplicate numbers with same color (color-number pairs can't repeat)
+    // En Colorloto SÍ se pueden repetir colores, solo NO se puede repetir la combinación exacta color+número
+    // Check for duplicate color-number pairs (combinaciones exactas)
     const userPairs = userColors.map((c, i) => `${c}-${userNumbers[i]}`);
     if (new Set(userPairs).size !== 6) {
-        Toast.warning('No puedes tener combinaciones idénticas de color y número', 3000);
+        Toast.warning('No puedes tener la misma combinación de color y número repetida', 3000);
         return;
     }
 
@@ -1248,11 +1329,58 @@ function highlightWinningNumbers(selector, userNumbers, resultNumbers) {
 // Auto-focus next input when filled
 document.querySelectorAll('.number-input').forEach((input, index, inputs) => {
     input.addEventListener('input', e => {
-        if (e.target.value.length >= 1 && index < inputs.length - 1) {
+        // Prevenir valores negativos o cero
+        if (e.target.value && parseInt(e.target.value) <= 0) {
+            e.target.value = '';
+            return;
+        }
+
+        // Limitar a máximo 2 dígitos
+        if (e.target.value.length > 2) {
+            e.target.value = e.target.value.slice(0, 2);
+        }
+
+        // Cambiar al siguiente input solo cuando se completen 2 dígitos
+        if (e.target.value.length >= 2 && index < inputs.length - 1) {
             // Move to next input in the same section
             const nextInput = inputs[index + 1];
             if (nextInput && nextInput.closest('.input-section') === input.closest('.input-section')) {
                 nextInput.focus();
+            }
+        }
+    });
+
+    // Prevenir entrada de caracteres no numéricos usando keypress
+    input.addEventListener('keypress', e => {
+        // Permitir solo números
+        if (e.key && !/[0-9]/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    // Validar contenido pegado
+    input.addEventListener('paste', e => {
+        e.preventDefault();
+        const pasteData = e.clipboardData.getData('text');
+        const cleanedData = pasteData.replace(/\D/g, '').slice(0, 2);
+        if (cleanedData && parseInt(cleanedData) > 0) {
+            e.target.value = cleanedData;
+            // Trigger input event para mover al siguiente
+            e.target.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    // Soporte para tecla Enter (validar el formulario actual)
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const section = input.closest('.tab-content');
+            if (section && section.id === 'baloto') {
+                validateBaloto();
+            } else if (section && section.id === 'miloto') {
+                validateMiloto();
+            } else if (section && section.id === 'colorloto') {
+                validateColorloto();
             }
         }
     });
@@ -1316,12 +1444,47 @@ function getHistory() {
 
 // Limpiar historial
 function clearHistory() {
-    if (confirm('¿Estás seguro de que quieres borrar todo el historial?')) {
-        localStorage.removeItem('validationHistory');
-        updateHistoryBadge();
-        renderHistory();
-        Toast.success('Historial limpiado correctamente', 3000);
-    }
+    showConfirmModal(
+        '¿Borrar todo el historial?',
+        'Esta acción no se puede deshacer. Se eliminarán todas las validaciones guardadas.',
+        () => {
+            localStorage.removeItem('validationHistory');
+            updateHistoryBadge();
+            renderHistory();
+            Toast.success('Historial limpiado', 2500);
+        }
+    );
+}
+
+// Modal de confirmación reutilizable
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay confirm-modal';
+    modal.innerHTML = `
+        <div class="modal confirm-dialog" onclick="event.stopPropagation()">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="confirm-buttons">
+                <button class="btn-secondary cancel-btn">Cancelar</button>
+                <button class="btn-primary confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('.cancel-btn').onclick = closeModal;
+    modal.querySelector('.confirm-btn').onclick = () => {
+        onConfirm();
+        closeModal();
+    };
+    modal.onclick = closeModal;
 }
 
 // Actualizar badge de contador

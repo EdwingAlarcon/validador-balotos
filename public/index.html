@@ -15,7 +15,12 @@
         <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
         <!-- Botón de Dark Mode Toggle - FASE 3 -->
-        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema oscuro/claro" title="Cambiar tema">
+        <button
+            class="theme-toggle"
+            id="themeToggle"
+            aria-label="Cambiar tema oscuro/claro"
+            title="Cambiar tema (Ctrl+D)"
+        >
             <span class="sun-icon" aria-hidden="true">☀️</span>
             <span class="moon-icon" aria-hidden="true">🌙</span>
         </button>
@@ -131,9 +136,24 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary" onclick="validateBaloto()" aria-label="Validar tu tiquete de Baloto">
-                        Validar Tiquete
-                    </button>
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
+                        <button
+                            class="btn-primary"
+                            onclick="validateBaloto()"
+                            aria-label="Validar tu tiquete de Baloto"
+                            style="flex: 1"
+                        >
+                            Validar Tiquete
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="clearUserInputsWithConfirm()"
+                            aria-label="Limpiar campos"
+                            title="Limpiar todos los campos (Ctrl+L)"
+                        >
+                            🗑️ Limpiar
+                        </button>
+                    </div>
 
                     <div id="baloto-result" class="result-container" role="region" aria-live="polite"></div>
 
@@ -237,13 +257,24 @@
                         </div>
                     </div>
 
-                    <button
-                        class="btn-primary"
-                        onclick="validateBalotoRevancha()"
-                        aria-label="Validar tu tiquete de Baloto Revancha"
-                    >
-                        Validar Tiquete
-                    </button>
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
+                        <button
+                            class="btn-primary"
+                            onclick="validateBalotoRevancha()"
+                            aria-label="Validar tu tiquete de Baloto Revancha"
+                            style="flex: 1"
+                        >
+                            Validar Tiquete
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="clearUserInputsWithConfirm()"
+                            aria-label="Limpiar campos"
+                            title="Limpiar todos los campos (Ctrl+L)"
+                        >
+                            🗑️ Limpiar
+                        </button>
+                    </div>
 
                     <div id="baloto-revancha-result" class="result-container" role="region" aria-live="polite"></div>
 
@@ -293,7 +324,17 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary" onclick="validateMiloto()">Validar Tiquete</button>
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
+                        <button class="btn-primary" onclick="validateMiloto()" style="flex: 1">Validar Tiquete</button>
+                        <button
+                            class="btn-secondary"
+                            onclick="clearUserInputsWithConfirm()"
+                            aria-label="Limpiar campos"
+                            title="Limpiar todos los campos (Ctrl+L)"
+                        >
+                            🗑️ Limpiar
+                        </button>
+                    </div>
 
                     <div id="miloto-result" class="result-container"></div>
 
@@ -453,7 +494,19 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary" onclick="validateColorloto()">Validar Tiquete</button>
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
+                        <button class="btn-primary" onclick="validateColorloto()" style="flex: 1">
+                            Validar Tiquete
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="clearUserInputsWithConfirm()"
+                            aria-label="Limpiar campos"
+                            title="Limpiar todos los campos (Ctrl+L)"
+                        >
+                            🗑️ Limpiar
+                        </button>
+                    </div>
 
                     <div id="colorloto-result" class="result-container"></div>
 
@@ -470,6 +523,10 @@
                         >resultadobaloto.com</a
                     >
                 </div>
+                <p style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted)">
+                    ⌨️ Atajos: <kbd>Ctrl+H</kbd> Historial • <kbd>Ctrl+D</kbd> Tema • <kbd>Ctrl+L</kbd> Limpiar •
+                    <kbd>Enter</kbd> Validar
+                </p>
             </footer>
         </div>
 
@@ -478,7 +535,7 @@
             class="history-button"
             onclick="openHistoryModal()"
             aria-label="Ver historial de validaciones"
-            title="Historial"
+            title="Historial (Ctrl+H)"
         >
             📋
             <span class="badge" id="history-count" style="display: none">0</span>
