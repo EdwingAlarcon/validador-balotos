@@ -32,7 +32,6 @@
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab-button active" data-tab="baloto">Baloto</button>
-                <button class="tab-button" data-tab="baloto-revancha">Baloto Revancha</button>
                 <button class="tab-button" data-tab="miloto">Miloto</button>
                 <button class="tab-button" data-tab="colorloto">Colorloto</button>
             </div>
@@ -122,55 +121,13 @@
                             </button>
                         </div>
                         <p id="sorteo-info" class="sorteo-info"></p>
-                        <div class="numbers-input">
-                            <input
-                                type="number"
-                                class="number-input baloto-result"
-                                min="1"
-                                max="43"
-                                placeholder="N1"
-                                aria-label="Resultado número 1"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-result"
-                                min="1"
-                                max="43"
-                                placeholder="N2"
-                                aria-label="Resultado número 2"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-result"
-                                min="1"
-                                max="43"
-                                placeholder="N3"
-                                aria-label="Resultado número 3"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-result"
-                                min="1"
-                                max="43"
-                                placeholder="N4"
-                                aria-label="Resultado número 4"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-result"
-                                min="1"
-                                max="43"
-                                placeholder="N5"
-                                aria-label="Resultado número 5"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-result-super"
-                                min="1"
-                                max="16"
-                                placeholder="SB"
-                                aria-label="Resultado Súper Balota"
-                            />
+                        <div class="results-balls-display" id="baloto-results-display">
+                            <div class="result-ball empty baloto-orange" data-index="0">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="1">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="2">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="3">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="4">?</div>
+                            <div class="result-ball empty baloto-red" data-index="5">?</div>
                         </div>
                     </div>
 
@@ -183,10 +140,8 @@
                     <!-- Botones Compartir - FASE 3 -->
                     <div id="baloto-share" class="share-buttons" style="display: none"></div>
                 </div>
-            </div>
 
-            <!-- Baloto Revancha Section -->
-            <div id="baloto-revancha" class="tab-content">
+                <!-- Baloto Revancha Section -->
                 <div class="section">
                     <h2>
                         Baloto Revancha
@@ -272,55 +227,13 @@
                             </button>
                         </div>
                         <p id="sorteo-revancha-info" class="sorteo-info"></p>
-                        <div class="numbers-input">
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result"
-                                min="1"
-                                max="43"
-                                placeholder="N1"
-                                aria-label="Resultado número 1"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result"
-                                min="1"
-                                max="43"
-                                placeholder="N2"
-                                aria-label="Resultado número 2"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result"
-                                min="1"
-                                max="43"
-                                placeholder="N3"
-                                aria-label="Resultado número 3"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result"
-                                min="1"
-                                max="43"
-                                placeholder="N4"
-                                aria-label="Resultado número 4"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result"
-                                min="1"
-                                max="43"
-                                placeholder="N5"
-                                aria-label="Resultado número 5"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-result-super"
-                                min="1"
-                                max="16"
-                                placeholder="SB"
-                                aria-label="Resultado Súper Balota"
-                            />
+                        <div class="results-balls-display" id="baloto-revancha-results-display">
+                            <div class="result-ball empty baloto-orange" data-index="0">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="1">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="2">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="3">?</div>
+                            <div class="result-ball empty baloto-orange" data-index="4">?</div>
+                            <div class="result-ball empty baloto-red" data-index="5">?</div>
                         </div>
                     </div>
 
@@ -370,12 +283,13 @@
                             </button>
                         </div>
                         <p class="helper-text">💡 Usa carga automática si tienes el servidor ejecutándose</p>
-                        <div class="numbers-input">
-                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N1" />
-                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N2" />
-                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N3" />
-                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N4" />
-                            <input type="number" class="number-input miloto-result" min="1" max="39" placeholder="N5" />
+                        <p id="sorteo-miloto-info" class="sorteo-info"></p>
+                        <div class="results-balls-display" id="miloto-results-display">
+                            <div class="result-ball miloto-cyan">--</div>
+                            <div class="result-ball miloto-cyan">--</div>
+                            <div class="result-ball miloto-cyan">--</div>
+                            <div class="result-ball miloto-cyan">--</div>
+                            <div class="result-ball miloto-cyan">--</div>
                         </div>
                     </div>
 
@@ -528,121 +442,14 @@
                             </button>
                         </div>
                         <p class="helper-text">💡 Usa carga automática si tienes el servidor ejecutándose</p>
-                        <div class="colorloto-grid">
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="0">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="0"
-                                />
-                            </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="1">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="1"
-                                />
-                            </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="2">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="2"
-                                />
-                            </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="3">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="3"
-                                />
-                            </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="4">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="4"
-                                />
-                            </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto result-color" data-index="5">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small result-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="5"
-                                />
-                            </div>
+                        <p id="sorteo-colorloto-info" class="sorteo-info"></p>
+                        <div class="results-balls-display" id="colorloto-results-display">
+                            <div class="result-ball empty" data-color="">-</div>
+                            <div class="result-ball empty" data-color="">-</div>
+                            <div class="result-ball empty" data-color="">-</div>
+                            <div class="result-ball empty" data-color="">-</div>
+                            <div class="result-ball empty" data-color="">-</div>
+                            <div class="result-ball empty" data-color="">-</div>
                         </div>
                     </div>
 

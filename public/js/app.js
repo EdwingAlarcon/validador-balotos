@@ -202,35 +202,43 @@ async function loadLatestBalotoResults() {
             return;
         }
 
-        // Llenar los inputs con los resultados
-        const resultInputs = document.querySelectorAll('.baloto-result');
-        result.numbers.forEach((num, index) => {
-            if (resultInputs[index]) {
-                resultInputs[index].value = num;
-            }
-        });
+        // Llenar las bolas visuales con los resultados
+        const ballsDisplay = document.getElementById('baloto-results-display');
+        if (ballsDisplay) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
 
-        document.querySelector('.baloto-result-super').value = result.superBalota;
+            // Llenar los 5 números principales
+            result.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.remove('empty');
+                    setTimeout(() => {
+                        balls[index].classList.add('loaded');
+                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
+                    }, index * 100);
+                }
+            });
 
-        // Animar los números cargados
-        animateLoadedNumbers('.baloto-result');
-        setTimeout(() => {
-            const superInput = document.querySelector('.baloto-result-super');
-            if (superInput) {
-                superInput.classList.add('loaded');
-                setTimeout(() => superInput.classList.remove('loaded'), 500);
+            // Llenar la Súper Balota (bola roja)
+            if (balls[5]) {
+                balls[5].textContent = result.superBalota.toString().padStart(2, '0');
+                balls[5].classList.remove('empty');
+                setTimeout(() => {
+                    balls[5].classList.add('loaded');
+                    setTimeout(() => balls[5].classList.remove('loaded'), 500);
+                }, 500);
             }
-        }, 500);
+        }
 
         // Mostrar información del sorteo
         const sorteoInfoElement = document.getElementById('sorteo-info');
         if (sorteoInfoElement) {
             let infoHTML = '';
             if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">Sorteo #${result.sorteo}</span>`;
+                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
             }
             if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">${result.fecha}</span>`;
+                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
             }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
@@ -271,35 +279,43 @@ async function loadLatestBalotoRevanchaResults() {
             return;
         }
 
-        // Llenar los inputs con los resultados
-        const resultInputs = document.querySelectorAll('.baloto-revancha-result');
-        result.numbers.forEach((num, index) => {
-            if (resultInputs[index]) {
-                resultInputs[index].value = num;
-            }
-        });
+        // Llenar las bolas visuales con los resultados
+        const ballsDisplay = document.getElementById('baloto-revancha-results-display');
+        if (ballsDisplay) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
 
-        document.querySelector('.baloto-revancha-result-super').value = result.superBalota;
+            // Llenar los 5 números principales
+            result.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.remove('empty');
+                    setTimeout(() => {
+                        balls[index].classList.add('loaded');
+                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
+                    }, index * 100);
+                }
+            });
 
-        // Animar los números cargados
-        animateLoadedNumbers('.baloto-revancha-result');
-        setTimeout(() => {
-            const superInput = document.querySelector('.baloto-revancha-result-super');
-            if (superInput) {
-                superInput.classList.add('loaded');
-                setTimeout(() => superInput.classList.remove('loaded'), 500);
+            // Llenar la Súper Balota (bola roja)
+            if (balls[5]) {
+                balls[5].textContent = result.superBalota.toString().padStart(2, '0');
+                balls[5].classList.remove('empty');
+                setTimeout(() => {
+                    balls[5].classList.add('loaded');
+                    setTimeout(() => balls[5].classList.remove('loaded'), 500);
+                }, 500);
             }
-        }, 500);
+        }
 
         // Mostrar información del sorteo
         const sorteoInfoElement = document.getElementById('sorteo-revancha-info');
         if (sorteoInfoElement) {
             let infoHTML = '';
             if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">Sorteo #${result.sorteo}</span>`;
+                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
             }
             if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">${result.fecha}</span>`;
+                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
             }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
@@ -343,16 +359,32 @@ async function loadLatestMilotoResults() {
             return;
         }
 
-        // Llenar los inputs con los resultados
-        const resultInputs = document.querySelectorAll('.miloto-result');
-        result.numbers.forEach((num, index) => {
-            if (resultInputs[index]) {
-                resultInputs[index].value = num;
-            }
-        });
+        // Llenar las bolas visuales con los resultados
+        const ballsDisplay = document.getElementById('miloto-results-display');
+        if (ballsDisplay) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
+            result.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+        }
 
-        // Animar los números cargados
-        animateLoadedNumbers('.miloto-result');
+        // Mostrar información del sorteo en la UI
+        const sorteoInfoElement = document.getElementById('sorteo-miloto-info');
+        if (sorteoInfoElement) {
+            let infoHTML = '';
+            if (result.sorteo) {
+                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
+            }
+            if (result.fecha) {
+                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
+            }
+            sorteoInfoElement.innerHTML = infoHTML;
+            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
+        }
 
         // Mostrar información del sorteo
         let message = `Resultados cargados: ${result.numbers.join(', ')}`;
@@ -406,19 +438,37 @@ async function loadLatestColorlotoResults() {
             return;
         }
 
-        // Llenar los selectores y inputs con los resultados
-        const resultColors = document.querySelectorAll('.result-color');
-        const resultNumbers = document.querySelectorAll('.result-number');
+        // Llenar las bolas visuales con los resultados
+        const ballsDisplay = document.getElementById('colorloto-results-display');
+        if (ballsDisplay) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
+            result.colorNumberPairs.forEach((pair, index) => {
+                if (balls[index]) {
+                    // Remover clases de color previas
+                    balls[index].className = 'result-ball';
+                    // Aplicar nueva clase de color según el resultado
+                    balls[index].classList.add(`colorloto-${pair.color}`);
+                    balls[index].setAttribute('data-color', pair.color);
+                    balls[index].textContent = pair.number.toString();
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+        }
 
-        result.colorNumberPairs.forEach((pair, index) => {
-            if (resultColors[index] && resultNumbers[index]) {
-                resultColors[index].value = pair.color;
-                resultNumbers[index].value = pair.number;
+        // Mostrar información del sorteo en la UI
+        const sorteoInfoElement = document.getElementById('sorteo-colorloto-info');
+        if (sorteoInfoElement) {
+            let infoHTML = '';
+            if (result.sorteo) {
+                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
             }
-        });
-
-        // Animar los números cargados
-        animateLoadedNumbers('.result-number');
+            if (result.fecha) {
+                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
+            }
+            sorteoInfoElement.innerHTML = infoHTML;
+            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
+        }
 
         // Mostrar información del sorteo
         const pairsDisplay = result.colorNumberPairs.map(p => `${p.color} ${p.number}`).join(', ');
@@ -488,7 +538,10 @@ function showResult(
 
 // Generate random numbers
 function generateRandomBaloto() {
-    const resultInputs = document.querySelectorAll('.baloto-result');
+    const ballsDisplay = document.getElementById('baloto-results-display');
+    if (!ballsDisplay) return;
+
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
     const numbers = [];
 
     // Generate 5 unique random numbers between 1-43
@@ -500,17 +553,26 @@ function generateRandomBaloto() {
     }
 
     numbers.sort((a, b) => a - b);
-    resultInputs.forEach((input, index) => {
-        input.value = numbers[index];
+    numbers.forEach((num, index) => {
+        if (balls[index]) {
+            balls[index].textContent = num.toString().padStart(2, '0');
+            balls[index].classList.remove('empty');
+        }
     });
 
     // Generate Súper Balota (1-16)
     const superBallot = Math.floor(Math.random() * 16) + 1;
-    document.querySelector('.baloto-result-super').value = superBallot;
+    if (balls[5]) {
+        balls[5].textContent = superBallot.toString().padStart(2, '0');
+        balls[5].classList.remove('empty');
+    }
 }
 
 function generateRandomBalotoRevancha() {
-    const resultInputs = document.querySelectorAll('.baloto-revancha-result');
+    const ballsDisplay = document.getElementById('baloto-revancha-results-display');
+    if (!ballsDisplay) return;
+
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
     const numbers = [];
 
     // Generate 5 unique random numbers between 1-43
@@ -522,17 +584,23 @@ function generateRandomBalotoRevancha() {
     }
 
     numbers.sort((a, b) => a - b);
-    resultInputs.forEach((input, index) => {
-        input.value = numbers[index];
+    numbers.forEach((num, index) => {
+        if (balls[index]) {
+            balls[index].textContent = num.toString().padStart(2, '0');
+            balls[index].classList.remove('empty');
+        }
     });
 
     // Generate Súper Balota (1-16)
     const superBallot = Math.floor(Math.random() * 16) + 1;
-    document.querySelector('.baloto-revancha-result-super').value = superBallot;
+    if (balls[5]) {
+        balls[5].textContent = superBallot.toString().padStart(2, '0');
+        balls[5].classList.remove('empty');
+    }
 }
 
 function generateRandomMiloto() {
-    const resultInputs = document.querySelectorAll('.miloto-result');
+    const ballsDisplay = document.getElementById('miloto-results-display');
     const numbers = [];
 
     // Generate 5 unique random numbers between 1-39
@@ -544,44 +612,69 @@ function generateRandomMiloto() {
     }
 
     numbers.sort((a, b) => a - b);
-    resultInputs.forEach((input, index) => {
-        input.value = numbers[index];
-    });
+
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        balls.forEach((ball, index) => {
+            ball.textContent = numbers[index].toString().padStart(2, '0');
+            ball.classList.add('ball-pop');
+            setTimeout(() => ball.classList.remove('ball-pop'), 500);
+        });
+    }
 }
 
 function generateRandomColorloto() {
+    const ballsDisplay = document.getElementById('colorloto-results-display');
     const colors = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
     const usedColors = [];
 
-    const resultColors = document.querySelectorAll('.result-color');
-    const resultNumbers = document.querySelectorAll('.result-number');
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        balls.forEach(ball => {
+            // Pick a unique random color
+            let color;
+            do {
+                color = colors[Math.floor(Math.random() * colors.length)];
+            } while (usedColors.includes(color));
+            usedColors.push(color);
 
-    // Generate 6 unique color-number combinations
-    for (let i = 0; i < 6; i++) {
-        // Pick a color that hasn't been used
-        let color;
-        do {
-            color = colors[Math.floor(Math.random() * colors.length)];
-        } while (usedColors.includes(color));
-        usedColors.push(color);
+            // Assign random number 1-7
+            const number = Math.floor(Math.random() * 7) + 1;
 
-        // Assign random number 1-7
-        const number = Math.floor(Math.random() * 7) + 1;
-
-        resultColors[i].value = color;
-        resultNumbers[i].value = number;
+            // Remover clases de color previas
+            ball.className = 'result-ball';
+            // Aplicar nueva clase de color
+            ball.classList.add(`colorloto-${color}`);
+            ball.setAttribute('data-color', color);
+            ball.textContent = number.toString();
+            ball.classList.add('ball-pop');
+            setTimeout(() => ball.classList.remove('ball-pop'), 500);
+        });
     }
 }
 
 // Validation functions
 function validateBaloto() {
     const userNumbers = getInputValues('.baloto-number');
-    const resultNumbers = getInputValues('.baloto-result');
+
+    // Obtener resultados desde las bolas visuales
+    const ballsDisplay = document.getElementById('baloto-results-display');
+    const resultNumbers = [];
+    let resultSuper = NaN;
+
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        for (let i = 0; i < 5; i++) {
+            const num = parseInt(balls[i]?.textContent);
+            if (!isNaN(num)) resultNumbers.push(num);
+        }
+        resultSuper = parseInt(balls[5]?.textContent);
+    }
+
     const userSuper = parseInt(document.querySelector('.baloto-super').value);
-    const resultSuper = parseInt(document.querySelector('.baloto-result-super').value);
 
     if (userNumbers.length !== 5 || resultNumbers.length !== 5 || isNaN(userSuper) || isNaN(resultSuper)) {
-        Toast.warning('Por favor, completa todos los campos', 3000);
+        Toast.warning('Por favor, completa todos los campos y carga los resultados oficiales', 3000);
         return;
     }
 
@@ -675,12 +768,25 @@ function validateBaloto() {
 
 function validateBalotoRevancha() {
     const userNumbers = getInputValues('.baloto-revancha-number');
-    const resultNumbers = getInputValues('.baloto-revancha-result');
+
+    // Obtener resultados desde las bolas visuales
+    const ballsDisplay = document.getElementById('baloto-revancha-results-display');
+    const resultNumbers = [];
+    let resultSuper = NaN;
+
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        for (let i = 0; i < 5; i++) {
+            const num = parseInt(balls[i]?.textContent);
+            if (!isNaN(num)) resultNumbers.push(num);
+        }
+        resultSuper = parseInt(balls[5]?.textContent);
+    }
+
     const userSuper = parseInt(document.querySelector('.baloto-revancha-super').value);
-    const resultSuper = parseInt(document.querySelector('.baloto-revancha-result-super').value);
 
     if (userNumbers.length !== 5 || resultNumbers.length !== 5 || isNaN(userSuper) || isNaN(resultSuper)) {
-        Toast.warning('Por favor, completa todos los campos', 3000);
+        Toast.warning('Por favor, completa todos los campos y carga los resultados oficiales', 3000);
         return;
     }
 
@@ -763,10 +869,21 @@ function validateBalotoRevancha() {
 
 function validateMiloto() {
     const userNumbers = getInputValues('.miloto-number');
-    const resultNumbers = getInputValues('.miloto-result');
+
+    // Obtener resultados desde las bolas visuales
+    const ballsDisplay = document.getElementById('miloto-results-display');
+    const resultNumbers = [];
+
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        for (let i = 0; i < 5; i++) {
+            const num = parseInt(balls[i]?.textContent);
+            if (!isNaN(num)) resultNumbers.push(num);
+        }
+    }
 
     if (userNumbers.length !== 5 || resultNumbers.length !== 5) {
-        Toast.warning('Por favor, completa todos los campos (5 números)', 3000);
+        Toast.warning('Por favor, completa todos los campos y carga los resultados oficiales', 3000);
         return;
     }
 
@@ -855,13 +972,17 @@ function validateColorloto() {
         userNumbers[index] = parseInt(input.value);
     });
 
-    // Get result selections
-    document.querySelectorAll('.result-color').forEach((select, index) => {
-        resultColors[index] = select.value;
-    });
-    document.querySelectorAll('.result-number').forEach((input, index) => {
-        resultNumbers[index] = parseInt(input.value);
-    });
+    // Get result selections from visual balls
+    const ballsDisplay = document.getElementById('colorloto-results-display');
+    if (ballsDisplay) {
+        const balls = ballsDisplay.querySelectorAll('.result-ball');
+        balls.forEach((ball, index) => {
+            const color = ball.getAttribute('data-color');
+            const number = parseInt(ball.textContent);
+            if (color) resultColors[index] = color;
+            if (!isNaN(number)) resultNumbers[index] = number;
+        });
+    }
 
     // Validate all fields are filled
     if (

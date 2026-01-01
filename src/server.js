@@ -102,43 +102,49 @@ app.get('/api/baloto-revancha', async (req, res) => {
 
         const $ = cheerio.load(response.data);
 
-        // Buscar los números del Baloto Revancha (segundo panel)
+        // Buscar los números del Baloto Revancha
         const numbers = [];
         const superBalota = [];
 
-        // El Baloto Revancha es típicamente el segundo panel
-        const revanchaPanel = $('#listaResultados .panel').eq(1);
+        // En el primer panel hay 10 números: los primeros 5 son Baloto, los siguientes 5 son Revancha
+        const firstPanel = $('#listaResultados .panel').eq(0);
 
-        // Números principales
-        revanchaPanel.find('.label-baloto').each((i, elem) => {
-            if (numbers.length < 5) {
-                const num = parseInt($(elem).text().trim());
-                if (!isNaN(num) && num >= 1 && num <= 43) {
-                    numbers.push(num);
-                }
+        const allNumbers = [];
+        firstPanel.find('.label-baloto').each((i, elem) => {
+            const num = parseInt($(elem).text().trim());
+            if (!isNaN(num) && num >= 1 && num <= 43) {
+                allNumbers.push(num);
             }
         });
 
-        // Súper Balota
-        revanchaPanel.find('.label-comple').each((i, elem) => {
-            if (superBalota.length < 1) {
-                const num = parseInt($(elem).text().trim());
-                if (!isNaN(num) && num >= 1 && num <= 16) {
-                    superBalota.push(num);
-                }
+        // Los números de la Revancha son del índice 5 al 9 (los últimos 5)
+        for (let i = 5; i < 10 && i < allNumbers.length; i++) {
+            numbers.push(allNumbers[i]);
+        }
+
+        // Súper Balota: la segunda (índice 1)
+        const allSuperBalotas = [];
+        firstPanel.find('.label-comple').each((i, elem) => {
+            const num = parseInt($(elem).text().trim());
+            if (!isNaN(num) && num >= 1 && num <= 16) {
+                allSuperBalotas.push(num);
             }
         });
+
+        if (allSuperBalotas.length > 1) {
+            superBalota.push(allSuperBalotas[1]); // Segunda Súper Balota = Revancha
+        }
 
         // Buscar fecha del sorteo
         let fecha = null;
-        const timeElement = revanchaPanel.find('time');
+        const timeElement = firstPanel.find('time');
         if (timeElement.length > 0) {
             fecha = timeElement.text().trim();
         }
 
         // Buscar número de sorteo
         let sorteo = null;
-        const heading = revanchaPanel.find('.panel-heading h2').text();
+        const heading = firstPanel.find('.panel-heading h2').text();
         const sorteoMatch = heading.match(/Baloto.*?(\d+)/i);
         if (sorteoMatch) {
             sorteo = sorteoMatch[1];
@@ -345,7 +351,7 @@ app.get('/api/debug/:game', async (req, res) => {
 });
 
 // Servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║   🎰 Servidor de Validador de Tiquetes iniciado          ║

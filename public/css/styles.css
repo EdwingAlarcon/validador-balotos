@@ -217,6 +217,13 @@ header p {
     font-weight: bold;
     background: var(--bg-input);
     color: var(--text-primary);
+    -moz-appearance: textfield;
+}
+
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .number-input:focus {
@@ -349,12 +356,138 @@ header p {
     font-weight: bold;
     background: var(--bg-input);
     color: var(--text-primary);
+    -moz-appearance: textfield;
+}
+
+.number-input-small::-webkit-outer-spin-button,
+.number-input-small::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .number-input-small:focus {
     outline: none;
     border-color: var(--border-color-focus);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Bolas visuales para resultados */
+.results-balls-display {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.result-ball {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 900;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                inset 0 -2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 2px 8px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: default;
+}
+
+.result-ball.baloto-orange {
+    background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+    border: 2px solid #CC7000;
+}
+
+.result-ball.baloto-red {
+    background: linear-gradient(135deg, #DC143C 0%, #FF4444 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 2px solid #8B0000;
+}
+
+.result-ball.miloto-cyan {
+    background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 2px solid #0e7490;
+}
+
+.result-ball.colorloto-amarillo {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+    border: 2px solid #d97706;
+}
+
+.result-ball.colorloto-azul {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 2px solid #1e3a8a;
+}
+
+.result-ball.colorloto-rojo {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 2px solid #991b1b;
+}
+
+.result-ball.colorloto-verde {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 2px solid #15803d;
+}
+
+.result-ball.colorloto-blanco {
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+    border: 2px solid #9ca3af;
+}
+
+.result-ball.colorloto-negro {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    color: #FFF;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    border: 2px solid #111827;
+}
+
+.result-ball.empty {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #9ca3af;
+    border: 2px dashed #9ca3af;
+}
+
+.result-ball.loaded {
+    animation: ballPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes ballPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+[data-theme="dark"] .result-ball.empty {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    color: #6b7280;
+    border-color: #6b7280;
 }
 
 /* Buttons */
@@ -1540,9 +1673,63 @@ footer a:hover {
 }
 
 [data-theme="dark"] .toast {
-    background: var(--bg-container);
-    color: var(--text-primary);
-    border: 1px solid var(--border-section);
+    background: #1f2937;
+    color: #f9fafb;
+    border: 1px solid #374151;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .toast.success {
+    border-left-color: #34d399;
+    background: linear-gradient(135deg, #1f2937 0%, #064e3b 100%);
+}
+
+[data-theme="dark"] .toast.error {
+    border-left-color: #f87171;
+    background: linear-gradient(135deg, #1f2937 0%, #7f1d1d 100%);
+}
+
+[data-theme="dark"] .toast.info {
+    border-left-color: #60a5fa;
+    background: linear-gradient(135deg, #1f2937 0%, #1e3a8a 100%);
+}
+
+[data-theme="dark"] .toast.warning {
+    border-left-color: #fbbf24;
+    background: linear-gradient(135deg, #1f2937 0%, #78350f 100%);
+}
+
+[data-theme="dark"] .toast.success .toast-icon {
+    color: #34d399;
+}
+
+[data-theme="dark"] .toast.error .toast-icon {
+    color: #f87171;
+}
+
+[data-theme="dark"] .toast.info .toast-icon {
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .toast.warning .toast-icon {
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .toast-title {
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .toast-message {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .toast-close {
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .toast-close:hover {
+    background: #374151;
+    color: #f3f4f6;
 }
 
 /* Información del sorteo */
@@ -1565,18 +1752,6 @@ footer a:hover {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-}
-
-.sorteo-info span::before {
-    font-size: 1.1rem;
-}
-
-.sorteo-numero::before {
-    content: '🎲';
-}
-
-.sorteo-fecha::before {
-    content: '📅';
 }
 
 [data-theme="dark"] .sorteo-info {
