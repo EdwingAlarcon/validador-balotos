@@ -2,14 +2,28 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const db = require('./services/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Usar puerto del entorno o 3000 por defecto
 
+// Inicializar base de datos al arrancar el servidor
+db.initDatabase();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Servir archivos estáticos desde public/
+
+// Desactivar caché para archivos estáticos en desarrollo
+app.use(
+    express.static('public', {
+        etag: false,
+        maxAge: 0,
+        setHeaders: res => {
+            res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        },
+    })
+);
 
 // Endpoint para obtener resultados de Baloto mediante scraping
 app.get('/api/baloto', async (req, res) => {

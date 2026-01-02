@@ -406,8 +406,11 @@ async function loadLatestMilotoResults() {
             result.numbers.forEach((num, index) => {
                 if (balls[index]) {
                     balls[index].textContent = num.toString().padStart(2, '0');
-                    balls[index].classList.add('ball-pop');
-                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                    balls[index].classList.remove('empty');
+                    setTimeout(() => {
+                        balls[index].classList.add('loaded');
+                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
+                    }, index * 100);
                 }
             });
         }
@@ -490,8 +493,11 @@ async function loadLatestColorlotoResults() {
                     balls[index].classList.add(`colorloto-${pair.color}`);
                     balls[index].setAttribute('data-color', pair.color);
                     balls[index].textContent = pair.number.toString();
-                    balls[index].classList.add('ball-pop');
-                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                    balls[index].classList.remove('empty');
+                    setTimeout(() => {
+                        balls[index].classList.add('loaded');
+                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
+                    }, index * 100);
                 }
             });
         }
@@ -744,6 +750,15 @@ function clearUserInputsWithConfirm() {
         clearUserInputs();
         Toast.success('Campos limpiados', 2000);
     });
+}
+
+// ========================================
+// VALIDATE BALOTO FUNCTION
+// ========================================
+function validateBaloto() {
+    const userNumbers = getInputValues('.baloto-number');
+
+    // Obtener resultados desde las bolas visuales
     const ballsDisplay = document.getElementById('baloto-results-display');
     const resultNumbers = [];
     let resultSuper = NaN;
@@ -1329,19 +1344,21 @@ function highlightWinningNumbers(selector, userNumbers, resultNumbers) {
 // Auto-focus next input when filled
 document.querySelectorAll('.number-input').forEach((input, index, inputs) => {
     input.addEventListener('input', e => {
-        // Prevenir valores negativos o cero
-        if (e.target.value && parseInt(e.target.value) <= 0) {
-            e.target.value = '';
-            return;
-        }
+        let value = e.target.value;
+
+        // Eliminar caracteres no numéricos
+        value = value.replace(/[^0-9]/g, '');
 
         // Limitar a máximo 2 dígitos
-        if (e.target.value.length > 2) {
-            e.target.value = e.target.value.slice(0, 2);
+        if (value.length > 2) {
+            value = value.slice(0, 2);
         }
 
+        // Actualizar el valor del input
+        e.target.value = value;
+
         // Cambiar al siguiente input solo cuando se completen 2 dígitos
-        if (e.target.value.length >= 2 && index < inputs.length - 1) {
+        if (value.length >= 2 && index < inputs.length - 1) {
             // Move to next input in the same section
             const nextInput = inputs[index + 1];
             if (nextInput && nextInput.closest('.input-section') === input.closest('.input-section')) {
