@@ -723,29 +723,39 @@ function generateRandomMiloto() {
 function generateRandomColorloto() {
     const ballsDisplay = document.getElementById('colorloto-results-display');
     const colors = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
-    const usedColors = [];
+    const generatedPairs = [];
 
     if (ballsDisplay) {
         const balls = ballsDisplay.querySelectorAll('.result-ball');
-        balls.forEach(ball => {
-            // Pick a unique random color
-            let color;
-            do {
-                color = colors[Math.floor(Math.random() * colors.length)];
-            } while (usedColors.includes(color));
-            usedColors.push(color);
 
-            // Assign random number 1-7
+        // Generar 6 pares color-número únicos (no repetir combinación exacta)
+        while (generatedPairs.length < 6) {
+            const color = colors[Math.floor(Math.random() * colors.length)];
             const number = Math.floor(Math.random() * 7) + 1;
+            const pair = `${color}-${number}`;
 
-            // Remover clases de color previas
-            ball.className = 'result-ball';
-            // Aplicar nueva clase de color
-            ball.classList.add(`colorloto-${color}`);
-            ball.setAttribute('data-color', color);
-            ball.textContent = number.toString();
-            ball.classList.add('ball-pop');
-            setTimeout(() => ball.classList.remove('ball-pop'), 500);
+            // Solo agregar si la combinación exacta no existe
+            if (!generatedPairs.some(p => p.pair === pair)) {
+                generatedPairs.push({ color, number, pair });
+            }
+        }
+
+        // Ordenar los pares según el orden especificado de colores
+        const colorOrder = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+        generatedPairs.sort((a, b) => colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color));
+
+        // Mostrar las bolas en orden
+        generatedPairs.forEach((item, index) => {
+            if (balls[index]) {
+                // Remover clases de color previas
+                balls[index].className = 'result-ball';
+                // Aplicar nueva clase de color
+                balls[index].classList.add(`colorloto-${item.color}`);
+                balls[index].setAttribute('data-color', item.color);
+                balls[index].textContent = item.number.toString();
+                balls[index].classList.add('ball-pop');
+                setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+            }
         });
     }
 }
