@@ -205,6 +205,21 @@ const colorlotoPrizes = {
     2: { category: '2 combinaciones exactas', prize: 5000 },
 };
 
+// Variables globales para acumulados y premios reales
+let balotoData = {
+    acumulado: null,
+    acumuladoRevancha: null,
+    premios: [],
+};
+
+let milotoData = {
+    acumulado: null,
+};
+
+let colorlotoData = {
+    acumulado: null,
+};
+
 // ========================================
 // LOAD LATEST RESULTS FUNCTIONS
 // ========================================
@@ -280,8 +295,20 @@ async function loadLatestBalotoResults() {
             if (result.fecha) {
                 infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
             }
+            if (result.acumulado) {
+                balotoData.acumulado = result.acumulado;
+                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
+                    'es-CO'
+                )}</span>`;
+            }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
+        }
+
+        // Guardar premios reales
+        if (result.premios && result.premios.length > 0) {
+            balotoData.premios = result.premios;
+            balotoData.acumuladoRevancha = result.acumuladoRevancha;
         }
 
         let toastText = `✅ Resultados cargados desde ${result.source}`;
@@ -357,8 +384,20 @@ async function loadLatestBalotoRevanchaResults() {
             if (result.fecha) {
                 infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
             }
+            if (result.acumulado) {
+                balotoData.acumuladoRevancha = result.acumulado;
+                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
+                    'es-CO'
+                )}</span>`;
+            }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
+        }
+
+        // Guardar premios reales
+        if (result.premios && result.premios.length > 0) {
+            // Los premios de revancha se guardan en balotoData
+            balotoData.premiosRevancha = result.premios;
         }
 
         Toast.success(`✅ Resultados de Revancha cargados desde ${result.source}`, 4000);
@@ -424,6 +463,12 @@ async function loadLatestMilotoResults() {
             }
             if (result.fecha) {
                 infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
+            }
+            if (result.acumulado) {
+                milotoData.acumulado = result.acumulado;
+                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
+                    'es-CO'
+                )}</span>`;
             }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
@@ -511,6 +556,12 @@ async function loadLatestColorlotoResults() {
             }
             if (result.fecha) {
                 infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
+            }
+            if (result.acumulado) {
+                colorlotoData.acumulado = result.acumulado;
+                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
+                    'es-CO'
+                )}</span>`;
             }
             sorteoInfoElement.innerHTML = infoHTML;
             sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
@@ -810,9 +861,21 @@ function validateBaloto() {
         userSuperInput.classList.add(superMatch ? 'winner' : 'loser');
     }
 
-    // Determine prize
+    // Determine prize - usar premios reales si están disponibles
     let prizeKey = `${matches}+${superMatch ? 1 : 0}`;
     let prize = balotoPrizes[prizeKey];
+    let prizeAmount = prize ? prize.prize : 0;
+
+    // Buscar premio real desde el servidor
+    if (balotoData.premios && balotoData.premios.length > 0) {
+        const realPrize = balotoData.premios.find(p => p.categoria.includes(`${matches} `));
+        if (realPrize && realPrize.premio > 0) {
+            prizeAmount = realPrize.premio;
+        } else if (matches === 5 && superMatch && balotoData.acumulado) {
+            // Premio mayor = acumulado
+            prizeAmount = balotoData.acumulado;
+        }
+    }
 
     // Agregar badge de aciertos
     const matchBadge = `<span class="match-badge">✓ ${matches} aciertos${superMatch ? ' + Super Balota' : ''}</span>`;
@@ -823,25 +886,25 @@ function validateBaloto() {
         matchBadge,
     ];
 
-    if (prize) {
+    if (prize && prizeAmount > 0) {
         // Determinar si es premio grande (más de 50 millones)
-        const isBigPrize = prize.prize >= 50000000;
+        const isBigPrize = prizeAmount >= 50000000;
         const trophy = isBigPrize ? '<span class="prize-trophy">🏆</span>' : '🎉';
 
-        Toast.success(`¡GANASTE! ${prize.category} - $${prize.prize.toLocaleString('es-CO')}`, 7000, '¡FELICIDADES!');
+        Toast.success(`¡GANASTE! ${prize.category} - $${prizeAmount.toLocaleString('es-CO')}`, 7000, '¡FELICIDADES!');
         showResult(
             'baloto-result',
             true,
             `${trophy} ¡FELICIDADES! ¡GANASTE!`,
             [...details, `Categoría: ${prize.category}`],
-            prize.prize,
+            prizeAmount,
             userNumbers,
             resultNumbers,
             matches
         );
 
         // Guardar en historial
-        saveToHistory('Baloto', details.join(' | '), true, prize.prize);
+        saveToHistory('Baloto', details.join(' | '), true, prizeAmount);
 
         // Celebración para premios grandes
         if (isBigPrize) {
@@ -919,6 +982,18 @@ function validateBalotoRevancha() {
 
     let prizeKey = `${matches}+${superMatch ? 1 : 0}`;
     let prize = balotoPrizes[prizeKey];
+    let prizeAmount = prize ? prize.prize : 0;
+
+    // Buscar premio real desde el servidor (Revancha)
+    if (balotoData.premiosRevancha && balotoData.premiosRevancha.length > 0) {
+        const realPrize = balotoData.premiosRevancha.find(p => p.categoria.includes(`${matches} `));
+        if (realPrize && realPrize.premio > 0) {
+            prizeAmount = realPrize.premio;
+        } else if (matches === 5 && superMatch && balotoData.acumuladoRevancha) {
+            // Premio mayor = acumulado
+            prizeAmount = balotoData.acumuladoRevancha;
+        }
+    }
 
     const matchBadge = `<span class="match-badge">✓ ${matches} aciertos${superMatch ? ' + Super Balota' : ''}</span>`;
 
@@ -928,23 +1003,23 @@ function validateBalotoRevancha() {
         matchBadge,
     ];
 
-    if (prize) {
-        const isBigPrize = prize.prize >= 50000000;
+    if (prize && prizeAmount > 0) {
+        const isBigPrize = prizeAmount >= 50000000;
         const trophy = isBigPrize ? '<span class="prize-trophy">🏆</span>' : '🎉';
 
-        Toast.success(`¡GANASTE! ${prize.category} - $${prize.prize.toLocaleString('es-CO')}`, 7000, '¡FELICIDADES!');
+        Toast.success(`¡GANASTE! ${prize.category} - $${prizeAmount.toLocaleString('es-CO')}`, 7000, '¡FELICIDADES!');
         showResult(
             'baloto-revancha-result',
             true,
             `${trophy} ¡FELICIDADES! ¡GANASTE EN REVANCHA!`,
             [...details, `Categoría: ${prize.category}`],
-            prize.prize,
+            prizeAmount,
             userNumbers,
             resultNumbers,
             matches
         );
 
-        saveToHistory('Baloto Revancha', details.join(' | '), true, prize.prize);
+        saveToHistory('Baloto Revancha', details.join(' | '), true, prizeAmount);
 
         if (isBigPrize) {
             document.getElementById('baloto-revancha-result').classList.add('celebration');

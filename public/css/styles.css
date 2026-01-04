@@ -40,6 +40,16 @@
     /* Sombras */
     --shadow-main: 0 20px 60px rgba(0, 0, 0, 0.3);
     --shadow-card: 0 4px 12px rgba(102, 126, 234, 0.15);
+
+    /* Resultados */
+    --result-loser-bg: #f5f5f5;
+    --result-loser-text: #666666;
+    --result-loser-border: #e0e0e0;
+    --result-loser-details-bg: rgba(0, 0, 0, 0.05);
+    --result-matched-number-bg: #667eea;
+    --result-matched-number-text: #ffffff;
+    --result-winner-bg: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --result-winner-text: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -75,6 +85,16 @@
     /* Sombras */
     --shadow-main: 0 20px 60px rgba(0, 0, 0, 0.6);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    /* Resultados */
+    --result-loser-bg: #2a2a3e;
+    --result-loser-text: #b0b3c1;
+    --result-loser-border: #3a3a4e;
+    --result-loser-details-bg: rgba(255, 255, 255, 0.05);
+    --result-matched-number-bg: #5568d3;
+    --result-matched-number-text: #ffffff;
+    --result-winner-bg: linear-gradient(135deg, #0d7a6e 0%, #2dc76d 100%);
+    --result-winner-text: #ffffff;
 }
 
 * {
@@ -617,14 +637,14 @@ header p {
 }
 
 .result-container.winner {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: white;
+    background: var(--result-winner-bg);
+    color: var(--result-winner-text);
 }
 
 .result-container.loser {
-    background: #f5f5f5;
-    color: #666;
-    border: 2px solid #e0e0e0;
+    background: var(--result-loser-bg);
+    color: var(--result-loser-text);
+    border: 2px solid var(--result-loser-border);
 }
 
 .result-container h3 {
@@ -640,7 +660,7 @@ header p {
 }
 
 .result-container.loser .result-details {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--result-loser-details-bg);
 }
 
 .result-details p {
@@ -658,7 +678,7 @@ header p {
 }
 
 .result-container.loser .prize-amount {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--result-loser-details-bg);
 }
 
 .matched-numbers {
@@ -682,8 +702,8 @@ header p {
 }
 
 .result-container.loser .matched-number {
-    background: #667eea;
-    color: white;
+    background: var(--result-matched-number-bg);
+    color: var(--result-matched-number-text);
 }
 
 /* Footer */
@@ -1773,8 +1793,21 @@ kbd {
     gap: 6px;
 }
 
+.sorteo-acumulado {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white !important;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(17, 153, 142, 0.3);
+}
+
 [data-theme="dark"] .sorteo-info {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+}
+
+[data-theme="dark"] .sorteo-acumulado {
+    background: linear-gradient(135deg, #0d7a6e 0%, #2dc76d 100%);
 }
 
 /* Responsive Fase 2 */

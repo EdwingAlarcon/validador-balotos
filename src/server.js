@@ -3,6 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const db = require('./services/database');
+const { getAcumuladosOficiales } = require('./services/acumuladosOficiales');
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Usar puerto del entorno o 3000 por defecto
@@ -78,6 +79,51 @@ app.get('/api/baloto', async (req, res) => {
             sorteo = sorteoMatch[1];
         }
 
+        // Extraer acumulado del sitio de resultados (fallback)
+        let acumulado = null;
+        let acumuladoRevancha = null;
+        $('p').each((i, el) => {
+            const text = $(el).text();
+            const match = text.match(/\$\s*([\d,\.]+)\s*millones?\s+y\s+\$\s*([\d,\.]+)\s*millones?/i);
+            if (match) {
+                acumulado = parseFloat(match[1].replace(/,/g, '')) * 1000000;
+                acumuladoRevancha = parseFloat(match[2].replace(/,/g, '')) * 1000000;
+            }
+        });
+
+        // Intentar obtener acumulados del sitio oficial (más actualizado)
+        try {
+            const acumuladosOficiales = await getAcumuladosOficiales();
+            if (acumuladosOficiales) {
+                if (acumuladosOficiales.baloto) {
+                    acumulado = acumuladosOficiales.baloto * 1000000;
+                }
+                if (acumuladosOficiales.revancha) {
+                    acumuladoRevancha = acumuladosOficiales.revancha * 1000000;
+                }
+            }
+        } catch (error) {
+            console.log('No se pudo obtener acumulados oficiales, usando fallback');
+        }
+
+        // Extraer premios de la tabla (primera tabla es Baloto)
+        const premios = [];
+        const prizeTable = $('table.table-bordered').first();
+        prizeTable.find('tr').each((i, row) => {
+            const cells = [];
+            $(row)
+                .find('td')
+                .each((j, cell) => {
+                    cells.push($(cell).text().trim());
+                });
+            if (cells.length >= 4 && cells[0].includes('Aciertos')) {
+                const categoria = cells[0];
+                const importePorGanador = cells[3].replace(/\$/g, '').replace(/\./g, '').replace(/,/g, '');
+                const premio = parseInt(importePorGanador) || 0;
+                premios.push({ categoria, premio });
+            }
+        });
+
         if (numbers.length === 5 && superBalota.length === 1) {
             res.json({
                 success: true,
@@ -85,6 +131,9 @@ app.get('/api/baloto', async (req, res) => {
                 superBalota: superBalota[0],
                 fecha: fecha,
                 sorteo: sorteo,
+                acumulado: acumulado,
+                acumuladoRevancha: acumuladoRevancha,
+                premios: premios,
                 source: 'resultadobaloto.com',
             });
         } else {
@@ -164,6 +213,44 @@ app.get('/api/baloto-revancha', async (req, res) => {
             sorteo = sorteoMatch[1];
         }
 
+        // Extraer acumulado de Revancha del sitio de resultados (fallback)
+        let acumuladoRevancha = null;
+        $('p').each((i, el) => {
+            const text = $(el).text();
+            const match = text.match(/\$\s*([\d,\.]+)\s*millones?\s+y\s+\$\s*([\d,\.]+)\s*millones?/i);
+            if (match) {
+                acumuladoRevancha = parseFloat(match[2].replace(/,/g, '')) * 1000000;
+            }
+        });
+
+        // Intentar obtener acumulado oficial (más actualizado)
+        try {
+            const acumuladosOficiales = await getAcumuladosOficiales();
+            if (acumuladosOficiales && acumuladosOficiales.revancha) {
+                acumuladoRevancha = acumuladosOficiales.revancha * 1000000;
+            }
+        } catch (error) {
+            console.log('No se pudo obtener acumulado oficial, usando fallback');
+        }
+
+        // Extraer premios de la tabla (segunda tabla es Revancha)
+        const premios = [];
+        const prizeTable = $('table.table-bordered').eq(1);
+        prizeTable.find('tr').each((i, row) => {
+            const cells = [];
+            $(row)
+                .find('td')
+                .each((j, cell) => {
+                    cells.push($(cell).text().trim());
+                });
+            if (cells.length >= 4 && cells[0].includes('Aciertos')) {
+                const categoria = cells[0];
+                const importePorGanador = cells[3].replace(/\$/g, '').replace(/\./g, '').replace(/,/g, '');
+                const premio = parseInt(importePorGanador) || 0;
+                premios.push({ categoria, premio });
+            }
+        });
+
         if (numbers.length === 5 && superBalota.length === 1) {
             res.json({
                 success: true,
@@ -171,6 +258,8 @@ app.get('/api/baloto-revancha', async (req, res) => {
                 superBalota: superBalota[0],
                 fecha: fecha,
                 sorteo: sorteo,
+                acumulado: acumuladoRevancha,
+                premios: premios,
                 source: 'resultadobaloto.com',
             });
         } else {
@@ -230,12 +319,33 @@ app.get('/api/miloto', async (req, res) => {
             sorteo = sorteoMatch[1];
         }
 
+        // Extraer acumulado del sitio de resultados (fallback)
+        let acumulado = null;
+        $('p').each((i, el) => {
+            const text = $(el).text();
+            const match = text.match(/\$\s*([\d,\.]+)\s*millones?.*Miloto/i);
+            if (match) {
+                acumulado = parseFloat(match[1].replace(/,/g, '')) * 1000000;
+            }
+        });
+
+        // Intentar obtener acumulado del sitio oficial (más actualizado)
+        try {
+            const acumuladosOficiales = await getAcumuladosOficiales();
+            if (acumuladosOficiales && acumuladosOficiales.miloto) {
+                acumulado = acumuladosOficiales.miloto * 1000000;
+            }
+        } catch (error) {
+            console.log('No se pudo obtener acumulado oficial, usando fallback');
+        }
+
         if (numbers.length === 5) {
             res.json({
                 success: true,
                 numbers: numbers,
                 fecha: fecha,
                 sorteo: sorteo,
+                acumulado: acumulado,
                 source: 'resultadobaloto.com',
             });
         } else {
@@ -318,12 +428,33 @@ app.get('/api/colorloto', async (req, res) => {
             sorteo = sorteoMatch[1];
         }
 
+        // Extraer acumulado del sitio de resultados (fallback)
+        let acumulado = null;
+        $('p').each((i, el) => {
+            const text = $(el).text();
+            const match = text.match(/\$\s*([\d,\.]+)\s*millones?.*Colorloto/i);
+            if (match) {
+                acumulado = parseFloat(match[1].replace(/,/g, '')) * 1000000;
+            }
+        });
+
+        // Intentar obtener acumulado del sitio oficial (más actualizado)
+        try {
+            const acumuladosOficiales = await getAcumuladosOficiales();
+            if (acumuladosOficiales && acumuladosOficiales.colorloto) {
+                acumulado = acumuladosOficiales.colorloto * 1000000;
+            }
+        } catch (error) {
+            console.log('No se pudo obtener acumulado oficial, usando fallback');
+        }
+
         if (colorNumberPairs.length === 6) {
             res.json({
                 success: true,
                 colorNumberPairs: colorNumberPairs,
                 fecha: fecha,
                 sorteo: sorteo,
+                acumulado: acumulado,
                 source: 'resultadobaloto.com',
             });
         } else {
