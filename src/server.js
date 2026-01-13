@@ -4,6 +4,13 @@ const cheerio = require('cheerio');
 const cors = require('cors');
 const db = require('./services/database');
 const { getAcumuladosOficiales } = require('./services/acumuladosOficiales');
+const {
+    generateIntelligentBaloto,
+    generateIntelligentMiloto,
+    generateIntelligentColorloto,
+    getNumberFrequency,
+    MIN_SORTEOS_FOR_STATISTICS,
+} = require('./services/intelligentGenerator');
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Usar puerto del entorno o 3000 por defecto
@@ -495,6 +502,118 @@ app.get('/api/debug/:game', async (req, res) => {
     }
 });
 
+// ========================================
+// GENERADOR INTELIGENTE - NUEVOS ENDPOINTS
+// ========================================
+
+// Generar números inteligentes de Baloto
+app.get('/api/generate/baloto', (req, res) => {
+    try {
+        const result = generateIntelligentBaloto();
+        res.json({
+            success: true,
+            numbers: result.numbers,
+            superBalota: result.superBalota,
+            method: result.method,
+            totalSorteos: result.totalSorteos,
+            minRequired: MIN_SORTEOS_FOR_STATISTICS,
+            message:
+                result.method === 'statistical'
+                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Generar números inteligentes de Miloto
+app.get('/api/generate/miloto', (req, res) => {
+    try {
+        const result = generateIntelligentMiloto();
+        res.json({
+            success: true,
+            numbers: result.numbers,
+            method: result.method,
+            totalSorteos: result.totalSorteos,
+            minRequired: MIN_SORTEOS_FOR_STATISTICS,
+            message:
+                result.method === 'statistical'
+                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Generar números inteligentes de Colorloto
+app.get('/api/generate/colorloto', (req, res) => {
+    try {
+        const result = generateIntelligentColorloto();
+        res.json({
+            success: true,
+            pairs: result.pairs,
+            method: result.method,
+            totalSorteos: result.totalSorteos,
+            minRequired: MIN_SORTEOS_FOR_STATISTICS,
+            message:
+                result.method === 'statistical'
+                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Endpoint de estadísticas generales
+app.get('/api/statistics', (req, res) => {
+    try {
+        const balotoTotal = db.getTotalResults('Baloto');
+        const milotoTotal = db.getTotalResults('Miloto');
+        const colorlotoTotal = db.getTotalResults('Colorloto');
+
+        const balotoFreq = balotoTotal > 0 ? getNumberFrequency('Baloto') : {};
+        const milotoFreq = milotoTotal > 0 ? getNumberFrequency('Miloto') : {};
+
+        // Top 10 números Baloto
+        const balotoTop10 = Object.entries(balotoFreq)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([num, count]) => ({ number: parseInt(num), count }));
+
+        // Top 10 números Miloto
+        const milotoTop10 = Object.entries(milotoFreq)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([num, count]) => ({ number: parseInt(num), count }));
+
+        res.json({
+            success: true,
+            totals: {
+                baloto: balotoTotal,
+                miloto: milotoTotal,
+                colorloto: colorlotoTotal,
+            },
+            minRequired: MIN_SORTEOS_FOR_STATISTICS,
+            baloto: {
+                hasEnoughData: balotoTotal >= MIN_SORTEOS_FOR_STATISTICS,
+                top10: balotoTop10,
+            },
+            miloto: {
+                hasEnoughData: milotoTotal >= MIN_SORTEOS_FOR_STATISTICS,
+                top10: milotoTop10,
+            },
+            colorloto: {
+                hasEnoughData: colorlotoTotal >= MIN_SORTEOS_FOR_STATISTICS,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Servidor
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
@@ -504,10 +623,14 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   📍 URL: http://localhost:${PORT}                         ║
 ║                                                            ║
 ║   📡 Endpoints disponibles:                               ║
-║   • GET  /api/baloto          - Resultados de Baloto      ║
-║   • GET  /api/baloto-revancha - Resultados Baloto Revancha║
-║   • GET  /api/miloto          - Resultados de Miloto      ║
-║   • GET  /api/colorloto       - Resultados de Colorloto   ║
+║   • GET  /api/baloto           - Resultados de Baloto     ║
+║   • GET  /api/baloto-revancha  - Resultados Revancha      ║
+║   • GET  /api/miloto           - Resultados de Miloto     ║
+║   • GET  /api/colorloto        - Resultados de Colorloto  ║
+║   • GET  /api/generate/baloto  - Generar Baloto IA        ║
+║   • GET  /api/generate/miloto  - Generar Miloto IA        ║
+║   • GET  /api/generate/colorloto - Generar Colorloto IA   ║
+║   • GET  /api/statistics       - Estadísticas generales   ║
 ║                                                            ║
 ║   🌐 Abre http://localhost:3000 en tu navegador          ║
 ╚════════════════════════════════════════════════════════════╝

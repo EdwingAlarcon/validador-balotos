@@ -761,6 +761,168 @@ function generateRandomColorloto() {
 }
 
 // ========================================
+// GENERACIÓN INTELIGENTE (BASADA EN ESTADÍSTICAS)
+// ========================================
+
+async function generateIntelligentBaloto() {
+    const ballsDisplay = document.getElementById('baloto-results-display');
+    if (!ballsDisplay) return;
+
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/generate/baloto`);
+        const data = await response.json();
+
+        if (data.success) {
+            // Mostrar números
+            data.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.remove('empty');
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+
+            // Mostrar súper balota
+            if (balls[5]) {
+                balls[5].textContent = data.superBalota.toString().padStart(2, '0');
+                balls[5].classList.remove('empty');
+                balls[5].classList.add('ball-pop');
+                setTimeout(() => balls[5].classList.remove('ball-pop'), 500);
+            }
+
+            // Mostrar mensaje sobre el método usado
+            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
+            const icon = data.method === 'weighted' ? '🧠' : '🎲';
+            Toast.info(`${icon} Generado usando ${method} (${data.totalSorteos} sorteos en BD)`, 4000);
+
+            if (data.message) {
+                console.log('ℹ️', data.message);
+            }
+        } else {
+            Toast.error('Error al generar números inteligentes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Toast.warning('No se pudo conectar al servidor. Usando generación aleatoria.', 3000);
+        generateRandomBaloto();
+    }
+}
+
+async function generateIntelligentBalotoRevancha() {
+    const ballsDisplay = document.getElementById('baloto-revancha-results-display');
+    if (!ballsDisplay) return;
+
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/generate/baloto`);
+        const data = await response.json();
+
+        if (data.success) {
+            data.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.remove('empty');
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+
+            if (balls[5]) {
+                balls[5].textContent = data.superBalota.toString().padStart(2, '0');
+                balls[5].classList.remove('empty');
+                balls[5].classList.add('ball-pop');
+                setTimeout(() => balls[5].classList.remove('ball-pop'), 500);
+            }
+
+            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
+            const icon = data.method === 'weighted' ? '🧠' : '🎲';
+            Toast.info(`${icon} Revancha generada usando ${method}`, 3000);
+        } else {
+            Toast.error('Error al generar números inteligentes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Toast.warning('Usando generación aleatoria', 3000);
+        generateRandomBalotoRevancha();
+    }
+}
+
+async function generateIntelligentMiloto() {
+    const ballsDisplay = document.getElementById('miloto-results-display');
+    if (!ballsDisplay) return;
+
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/generate/miloto`);
+        const data = await response.json();
+
+        if (data.success) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
+            data.numbers.forEach((num, index) => {
+                if (balls[index]) {
+                    balls[index].textContent = num.toString().padStart(2, '0');
+                    balls[index].classList.remove('empty');
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+
+            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
+            const icon = data.method === 'weighted' ? '🧠' : '🎲';
+            Toast.info(`${icon} Miloto generado usando ${method}`, 3000);
+        } else {
+            Toast.error('Error al generar números inteligentes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Toast.warning('Usando generación aleatoria', 3000);
+        generateRandomMiloto();
+    }
+}
+
+async function generateIntelligentColorloto() {
+    const ballsDisplay = document.getElementById('colorloto-results-display');
+    if (!ballsDisplay) return;
+
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/generate/colorloto`);
+        const data = await response.json();
+
+        if (data.success) {
+            const balls = ballsDisplay.querySelectorAll('.result-ball');
+            const colorOrder = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+
+            // Ordenar pares
+            const sortedPairs = data.pairs.sort((a, b) => colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color));
+
+            sortedPairs.forEach((pair, index) => {
+                if (balls[index]) {
+                    balls[index].className = 'result-ball';
+                    balls[index].classList.add(`colorloto-${pair.color}`);
+                    balls[index].setAttribute('data-color', pair.color);
+                    balls[index].textContent = pair.number.toString();
+                    balls[index].classList.add('ball-pop');
+                    setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
+                }
+            });
+
+            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
+            const icon = data.method === 'weighted' ? '🧠' : '🎲';
+            Toast.info(`${icon} Colorloto generado usando ${method}`, 3000);
+        } else {
+            Toast.error('Error al generar números inteligentes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Toast.warning('Usando generación aleatoria', 3000);
+        generateRandomColorloto();
+    }
+}
+
+// ========================================
 // LIMPIAR INPUTS DESPUÉS DE VALIDAR
 // ========================================
 function clearUserInputs() {
