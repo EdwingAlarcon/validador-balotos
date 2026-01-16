@@ -41,18 +41,24 @@
                 <button class="tab-button" data-tab="colorloto">Colorloto</button>
             </div>
 
-            <!-- Baloto Section -->
+            <!-- Baloto Section - Integrado con Revancha -->
             <div id="baloto" class="tab-content active">
                 <div class="section">
                     <h2>
-                        Baloto
+                        Baloto + Revancha
                         <span class="tooltip" tabindex="0">
                             <span class="tooltip-icon" aria-label="Información sobre Baloto">?</span>
-                            <span class="tooltip-text">5 números del 1-43 + Super Balota 1-16</span>
+                            <span class="tooltip-text"
+                                >Valida tus números contra Baloto y Revancha simultáneamente</span
+                            >
                         </span>
                     </h2>
-                    <p class="description">Ingresa los 5 números principales (1-43) y el Súper Balota (1-16)</p>
+                    <p class="description">
+                        Ingresa tus 5 números principales (1-43) y el Súper Balota (1-16). Validaremos contra ambos
+                        sorteos.
+                    </p>
 
+                    <!-- Sección de entrada única para el usuario -->
                     <div class="input-section">
                         <h3>Tus Números</h3>
                         <div class="numbers-input">
@@ -62,7 +68,7 @@
                                 min="1"
                                 max="43"
                                 placeholder="N1"
-                                aria-label="Número 1 de Baloto"
+                                aria-label="Número 1"
                             />
                             <input
                                 type="number"
@@ -70,7 +76,7 @@
                                 min="1"
                                 max="43"
                                 placeholder="N2"
-                                aria-label="Número 2 de Baloto"
+                                aria-label="Número 2"
                             />
                             <input
                                 type="number"
@@ -78,7 +84,7 @@
                                 min="1"
                                 max="43"
                                 placeholder="N3"
-                                aria-label="Número 3 de Baloto"
+                                aria-label="Número 3"
                             />
                             <input
                                 type="number"
@@ -86,7 +92,7 @@
                                 min="1"
                                 max="43"
                                 placeholder="N4"
-                                aria-label="Número 4 de Baloto"
+                                aria-label="Número 4"
                             />
                             <input
                                 type="number"
@@ -94,7 +100,7 @@
                                 min="1"
                                 max="43"
                                 placeholder="N5"
-                                aria-label="Número 5 de Baloto"
+                                aria-label="Número 5"
                             />
                             <input
                                 type="number"
@@ -107,26 +113,27 @@
                         </div>
                     </div>
 
+                    <!-- Resultados de Baloto -->
                     <div class="input-section">
-                        <h3>Resultados del Sorteo</h3>
+                        <h3>🎰 Resultados Baloto</h3>
                         <div class="api-buttons">
                             <button
                                 class="btn-api"
-                                onclick="loadLatestBalotoResults()"
-                                aria-label="Cargar últimos resultados oficiales de Baloto"
+                                onclick="loadLatestBalotoIntegratedResults()"
+                                aria-label="Cargar últimos resultados oficiales de Baloto y Revancha"
                             >
-                                🌐 Cargar Últimos Resultados Oficiales
+                                🌐 Cargar Resultados Oficiales (Ambos)
                             </button>
                             <button
                                 class="btn-secondary"
-                                onclick="generateRandomBaloto()"
+                                onclick="generateRandomBaloto(); generateRandomBalotoRevancha();"
                                 aria-label="Generar números aleatorios para prueba"
                             >
                                 🎲 Aleatorio
                             </button>
                             <button
                                 class="btn-intelligent"
-                                onclick="generateIntelligentBaloto()"
+                                onclick="generateIntelligentBaloto(); generateIntelligentBalotoRevancha();"
                                 aria-label="Generar números basados en estadísticas"
                                 title="Genera números usando estadísticas de sorteos históricos"
                             >
@@ -144,124 +151,9 @@
                         </div>
                     </div>
 
-                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
-                        <button
-                            class="btn-primary"
-                            onclick="validateBaloto()"
-                            aria-label="Validar tu tiquete de Baloto"
-                            style="flex: 1"
-                        >
-                            Validar Tiquete
-                        </button>
-                        <button
-                            class="btn-secondary"
-                            onclick="clearUserInputsWithConfirm()"
-                            aria-label="Limpiar campos"
-                            title="Limpiar todos los campos (Ctrl+L)"
-                        >
-                            🗑️ Limpiar
-                        </button>
-                    </div>
-
-                    <div id="baloto-result" class="result-container" role="region" aria-live="polite"></div>
-
-                    <!-- Botones Compartir - FASE 3 -->
-                    <div id="baloto-share" class="share-buttons" style="display: none"></div>
-                </div>
-
-                <!-- Baloto Revancha Section -->
-                <div class="section">
-                    <h2>
-                        Baloto Revancha
-                        <span class="tooltip" tabindex="0">
-                            <span class="tooltip-icon" aria-label="Información sobre Baloto Revancha">?</span>
-                            <span class="tooltip-text">5 números del 1-43 + Super Balota 1-16 (Sorteo adicional)</span>
-                        </span>
-                    </h2>
-                    <p class="description">
-                        Ingresa los 5 números principales (1-43) y el Súper Balota (1-16) del sorteo de Revancha
-                    </p>
-
+                    <!-- Resultados de Revancha -->
                     <div class="input-section">
-                        <h3>Tus Números</h3>
-                        <div class="numbers-input">
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-number"
-                                min="1"
-                                max="43"
-                                placeholder="N1"
-                                aria-label="Tu número 1"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-number"
-                                min="1"
-                                max="43"
-                                placeholder="N2"
-                                aria-label="Tu número 2"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-number"
-                                min="1"
-                                max="43"
-                                placeholder="N3"
-                                aria-label="Tu número 3"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-number"
-                                min="1"
-                                max="43"
-                                placeholder="N4"
-                                aria-label="Tu número 4"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-number"
-                                min="1"
-                                max="43"
-                                placeholder="N5"
-                                aria-label="Tu número 5"
-                            />
-                            <input
-                                type="number"
-                                class="number-input baloto-revancha-super"
-                                min="1"
-                                max="16"
-                                placeholder="SB"
-                                aria-label="Súper Balota"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="input-section">
-                        <h3>Resultados del Sorteo</h3>
-                        <div class="api-buttons">
-                            <button
-                                class="btn-api"
-                                onclick="loadLatestBalotoRevanchaResults()"
-                                aria-label="Cargar últimos resultados oficiales de Baloto Revancha"
-                            >
-                                🌐 Cargar Últimos Resultados Oficiales
-                            </button>
-                            <button
-                                class="btn-secondary"
-                                onclick="generateRandomBalotoRevancha()"
-                                aria-label="Generar números aleatorios para prueba"
-                            >
-                                🎲 Aleatorio
-                            </button>
-                            <button
-                                class="btn-intelligent"
-                                onclick="generateIntelligentBalotoRevancha()"
-                                aria-label="Generar números basados en estadísticas"
-                                title="Genera números usando estadísticas de sorteos históricos"
-                            >
-                                🧠 Inteligente
-                            </button>
-                        </div>
+                        <h3>🎯 Resultados Revancha</h3>
                         <p id="sorteo-revancha-info" class="sorteo-info"></p>
                         <div class="results-balls-display" id="baloto-revancha-results-display">
                             <div class="result-ball empty baloto-orange" data-index="0">?</div>
@@ -273,14 +165,15 @@
                         </div>
                     </div>
 
+                    <!-- Botón de validación integrado -->
                     <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px">
                         <button
                             class="btn-primary"
-                            onclick="validateBalotoRevancha()"
-                            aria-label="Validar tu tiquete de Baloto Revancha"
+                            onclick="validateBalotoIntegrated()"
+                            aria-label="Validar tu tiquete contra Baloto y Revancha"
                             style="flex: 1"
                         >
-                            Validar Tiquete
+                            🎲 Validar Baloto + Revancha
                         </button>
                         <button
                             class="btn-secondary"
@@ -292,10 +185,11 @@
                         </button>
                     </div>
 
-                    <div id="baloto-revancha-result" class="result-container" role="region" aria-live="polite"></div>
+                    <!-- Contenedor de resultados integrados -->
+                    <div id="baloto-integrated-result" class="result-container" role="region" aria-live="polite"></div>
 
                     <!-- Botones Compartir - FASE 3 -->
-                    <div id="baloto-revancha-share" class="share-buttons" style="display: none"></div>
+                    <div id="baloto-share" class="share-buttons" style="display: none"></div>
                 </div>
             </div>
 
