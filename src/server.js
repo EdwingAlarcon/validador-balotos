@@ -614,6 +614,163 @@ app.get('/api/statistics', (req, res) => {
     }
 });
 
+// ========================================
+// ENDPOINTS DE HISTORIAL DE SORTEOS
+// ========================================
+
+// Endpoint para listar sorteos históricos
+app.get('/api/history/:game', (req, res) => {
+    try {
+        const { game } = req.params;
+        const limit = parseInt(req.query.limit) || 50;
+
+        // Validar juego
+        const validGames = ['Baloto', 'Baloto Revancha', 'Miloto', 'Colorloto'];
+        if (!validGames.includes(game)) {
+            return res.status(400).json({
+                success: false,
+                error: `Juego no válido. Opciones: ${validGames.join(', ')}`,
+            });
+        }
+
+        const results = db.getAllResults(game, limit);
+
+        res.json({
+            success: true,
+            game: game,
+            total: results.length,
+            sorteos: results.map(r => ({
+                id: r.id,
+                sorteo: r.sorteo,
+                fecha: r.fecha,
+                numeros: r.numeros.split(',').map(n => parseInt(n.trim())),
+                superBalota: r.superBalota ? parseInt(r.superBalota) : null,
+                colorNumberPairs: r.colorNumberPairs ? JSON.parse(r.colorNumberPairs) : null,
+            })),
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Endpoint para obtener un sorteo específico por ID
+app.get('/api/history/:game/:sorteoId', (req, res) => {
+    try {
+        const { game, sorteoId } = req.params;
+
+        const result = db.db
+            .prepare(
+                `
+            SELECT * FROM historical_results
+            WHERE game = ? AND sorteo = ?
+            LIMIT 1
+        `
+            )
+            .get(game, parseInt(sorteoId));
+
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                error: 'Sorteo no encontrado',
+            });
+        }
+
+        res.json({
+            success: true,
+            sorteo: {
+                id: result.id,
+                sorteo: result.sorteo,
+                fecha: result.fecha,
+                numeros: result.numeros.split(',').map(n => parseInt(n.trim())),
+                superBalota: result.superBalota ? parseInt(result.superBalota) : null,
+                colorNumberPairs: result.colorNumberPairs ? JSON.parse(result.colorNumberPairs) : null,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Endpoint para validar contra sorteo histórico
+app.post('/api/validate-historical', express.json(), (req, res) => {
+    try {
+        const { game, sorteoId, userNumbers, superBalota, colorNumberPairs } = req.body;
+
+        // Obtener resultado histórico
+        const result = db.db
+            .prepare(
+                `
+            SELECT * FROM historical_results
+            WHERE game = ? AND sorteo = ?
+            LIMIT 1
+        `
+            )
+            .get(game, parseInt(sorteoId));
+
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                error: 'Sorteo no encontrado',
+            });
+        }
+
+        // Convertir resultados históricos
+        const historicalNumbers = result.numeros.split(',').map(n => parseInt(n.trim()));
+        const historicalSuperBalota = result.superBalota ? parseInt(result.superBalota) : null;
+
+        // Calcular aciertos según el juego
+        let validation = {};
+
+        if (game === 'Baloto' || game === 'Baloto Revancha') {
+            const matches = userNumbers.filter(num => historicalNumbers.includes(num)).length;
+            const superMatch = superBalota === historicalSuperBalota;
+
+            validation = {
+                matches,
+                superMatch,
+                userNumbers,
+                historicalNumbers,
+                userSuperBalota: superBalota,
+                historicalSuperBalota,
+            };
+        } else if (game === 'Miloto') {
+            const matches = userNumbers.filter(num => historicalNumbers.includes(num)).length;
+
+            validation = {
+                matches,
+                userNumbers,
+                historicalNumbers,
+            };
+        } else if (game === 'Colorloto') {
+            const historicalPairs = JSON.parse(result.colorNumberPairs);
+            let exactMatches = 0;
+
+            colorNumberPairs.forEach((userPair, index) => {
+                const histPair = historicalPairs[index];
+                if (userPair.color === histPair.color && userPair.number === histPair.number) {
+                    exactMatches++;
+                }
+            });
+
+            validation = {
+                exactMatches,
+                userPairs: colorNumberPairs,
+                historicalPairs,
+            };
+        }
+
+        res.json({
+            success: true,
+            game,
+            sorteo: result.sorteo,
+            fecha: result.fecha,
+            validation,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Servidor
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
@@ -631,6 +788,9 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   • GET  /api/generate/miloto  - Generar Miloto IA        ║
 ║   • GET  /api/generate/colorloto - Generar Colorloto IA   ║
 ║   • GET  /api/statistics       - Estadísticas generales   ║
+║   • GET  /api/history/:game    - Historial de sorteos    ║
+║   • GET  /api/history/:game/:id - Sorteo específico      ║
+║   • POST /api/validate-historical - Validar histórico    ║
 ║                                                            ║
 ║   🌐 Abre http://localhost:3000 en tu navegador          ║
 ╚════════════════════════════════════════════════════════════╝

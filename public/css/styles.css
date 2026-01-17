@@ -2733,3 +2733,182 @@ html[data-theme='dark'] #estadisticas {
     color: #e8eaed;
 }
 
+/* ========================================
+   SELECTOR DE SORTEOS HISTÓRICOS
+   ======================================== */
+
+.historical-selector-section {
+    background: var(--bg-section);
+    border: 1px solid var(--border-section);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.historical-selector-section h3 {
+    color: var(--text-primary);
+}
+
+.sorteo-type-selector {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.radio-label:hover {
+    color: var(--accent-color);
+}
+
+.radio-label input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+    filter: brightness(1);
+}
+
+.radio-label span {
+    user-select: none;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.sorteo-dropdown {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.sorteo-dropdown:hover {
+    border-color: var(--accent-color);
+}
+
+.sorteo-dropdown:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.sorteo-dropdown option {
+    padding: 10px;
+}
+
+.sorteo-dropdown.hidden {
+    display: none;
+}
+
+/* Dark mode para selector de sorteos */
+html[data-theme='dark'] .historical-selector-section {
+    background: var(--bg-section);
+    border-color: var(--border-section);
+}
+
+html[data-theme='dark'] .historical-selector-section h3 {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+html[data-theme='dark'] .radio-label {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+html[data-theme='dark'] .radio-label span {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+html[data-theme='dark'] .radio-label:hover {
+    color: #8ab4f8 !important;
+}
+
+html[data-theme='dark'] .radio-label:hover span {
+    color: #8ab4f8 !important;
+}
+
+html[data-theme='dark'] .radio-label input[type="radio"] {
+    filter: brightness(1.3) contrast(1.2);
+    accent-color: #8ab4f8;
+}
+
+html[data-theme='dark'] .sorteo-dropdown {
+    background: var(--bg-input) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color);
+    font-weight: 500;
+}
+
+html[data-theme='dark'] .sorteo-dropdown option {
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+}
+
+/* Sobrescribir cualquier regla que ponga texto negro */
+html[data-theme='dark'] .historical-selector-section * {
+    color: inherit;
+}
+
+html[data-theme='dark'] .sorteo-type-selector,
+html[data-theme='dark'] .sorteo-type-selector label,
+html[data-theme='dark'] .sorteo-type-selector span,
+html[data-theme='dark'] .sorteo-type-selector input {
+    color: #ffffff !important;
+}
+
+/* Específicamente para los spans de las opciones de radio */
+html[data-theme='dark'] .radio-label > span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme='dark'] label.radio-label > span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+/* Máxima prioridad para texto de radio labels */
+[data-theme='dark'] .historical-selector-section .radio-label span {
+    color: #ffffff !important;
+}
+
+[data-theme='dark'] .historical-selector-section label span {
+    color: #ffffff !important;
+}
+
+[data-theme='dark'] .input-section.historical-selector-section label span {
+    color: #ffffff !important;
+}
+/* Clase específica para las opciones de radio */
+[data-theme='dark'] .radio-option-label span {
+    color: #ffffff !important;
+}
+
+html[data-theme='dark'] label.radio-option-label span {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .radio-option-label span {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] label.radio-option-label span {
+    color: #ffffff !important;
+}
+

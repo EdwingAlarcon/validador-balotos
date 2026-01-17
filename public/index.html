@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" data-theme="light">
     <head>
         <meta charset="UTF-8" />
@@ -113,6 +113,35 @@
                         </div>
                     </div>
 
+                    <!-- Selector de Sorteo -->
+                    <div class="input-section historical-selector-section">
+                        <h3>🗓️ Seleccionar Sorteo</h3>
+                        <div class="sorteo-type-selector">
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="baloto-sorteo-type"
+                                    value="latest"
+                                    checked
+                                    onchange="toggleBalotoHistoricalSelector()"
+                                />
+                                <span>Último sorteo (actual)</span>
+                            </label>
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="baloto-sorteo-type"
+                                    value="historical"
+                                    onchange="toggleBalotoHistoricalSelector()"
+                                />
+                                <span>Sorteo anterior</span>
+                            </label>
+                        </div>
+                        <select id="baloto-sorteo-selector" class="sorteo-dropdown hidden">
+                            <option value="">Seleccionar sorteo...</option>
+                        </select>
+                    </div>
+
                     <!-- Resultados de Baloto -->
                     <div class="input-section">
                         <h3>🎰 Resultados Baloto</h3>
@@ -126,14 +155,20 @@
                             </button>
                             <button
                                 class="btn-secondary"
-                                onclick="generateRandomBaloto(); generateRandomBalotoRevancha();"
+                                onclick="
+                                    generateRandomBaloto();
+                                    generateRandomBalotoRevancha();
+                                "
                                 aria-label="Generar números aleatorios para prueba"
                             >
                                 🎲 Aleatorio
                             </button>
                             <button
                                 class="btn-intelligent"
-                                onclick="generateIntelligentBaloto(); generateIntelligentBalotoRevancha();"
+                                onclick="
+                                    generateIntelligentBaloto();
+                                    generateIntelligentBalotoRevancha();
+                                "
                                 aria-label="Generar números basados en estadísticas"
                                 title="Genera números usando estadísticas de sorteos históricos"
                             >
@@ -208,6 +243,35 @@
                             <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N4" />
                             <input type="number" class="number-input miloto-number" min="1" max="39" placeholder="N5" />
                         </div>
+                    </div>
+
+                    <!-- Selector de Sorteo Miloto -->
+                    <div class="input-section historical-selector-section">
+                        <h3>🗓️ Seleccionar Sorteo</h3>
+                        <div class="sorteo-type-selector">
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="miloto-sorteo-type"
+                                    value="latest"
+                                    checked
+                                    onchange="toggleMilotoHistoricalSelector()"
+                                />
+                                <span>Último sorteo (actual)</span>
+                            </label>
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="miloto-sorteo-type"
+                                    value="historical"
+                                    onchange="toggleMilotoHistoricalSelector()"
+                                />
+                                <span>Sorteo anterior</span>
+                            </label>
+                        </div>
+                        <select id="miloto-sorteo-selector" class="sorteo-dropdown hidden">
+                            <option value="">Seleccionar sorteo...</option>
+                        </select>
                     </div>
 
                     <div class="input-section">
@@ -382,6 +446,35 @@
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Selector de Sorteo Colorloto -->
+                    <div class="input-section historical-selector-section">
+                        <h3>🗓️ Seleccionar Sorteo</h3>
+                        <div class="sorteo-type-selector">
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="colorloto-sorteo-type"
+                                    value="latest"
+                                    checked
+                                    onchange="toggleColorlotoHistoricalSelector()"
+                                />
+                                <span>Último sorteo (actual)</span>
+                            </label>
+                            <label class="radio-label radio-option-label">
+                                <input
+                                    type="radio"
+                                    name="colorloto-sorteo-type"
+                                    value="historical"
+                                    onchange="toggleColorlotoHistoricalSelector()"
+                                />
+                                <span>Sorteo anterior</span>
+                            </label>
+                        </div>
+                        <select id="colorloto-sorteo-selector" class="sorteo-dropdown hidden">
+                            <option value="">Seleccionar sorteo...</option>
+                        </select>
                     </div>
 
                     <div class="input-section">

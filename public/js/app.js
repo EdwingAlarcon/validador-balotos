@@ -528,10 +528,13 @@ async function loadLatestBalotoIntegratedResults() {
                     if (balls[index]) {
                         balls[index].textContent = num.toString().padStart(2, '0');
                         balls[index].classList.remove('empty');
-                        setTimeout(() => {
-                            balls[index].classList.add('loaded');
-                            setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                        }, index * 100 + 600); // Offset para que sea después de Baloto
+                        setTimeout(
+                            () => {
+                                balls[index].classList.add('loaded');
+                                setTimeout(() => balls[index].classList.remove('loaded'), 500);
+                            },
+                            index * 100 + 600
+                        ); // Offset para que sea después de Baloto
                     }
                 });
 
@@ -1196,8 +1199,8 @@ function clearUserInputsWithConfirm() {
         hasValues && hasResults
             ? 'Se borrarán todos los números ingresados y los resultados mostrados.'
             : hasValues
-            ? 'Se borrarán todos los números ingresados.'
-            : 'Se borrarán los resultados mostrados.';
+              ? 'Se borrarán todos los números ingresados.'
+              : 'Se borrarán los resultados mostrados.';
 
     showConfirmModal('¿Limpiar campos y resultados?', message, () => {
         clearUserInputs(true); // Limpiar inputs y resultados
@@ -1679,8 +1682,8 @@ function validateBalotoIntegrated() {
 
         resultHTML += `<div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
             <h4 style="color: #fff; margin: 0 0 10px 0;">${trophy} ${
-            isRefund ? '¡Recuperaste tu apuesta!' : '¡GANASTE!'
-        }</h4>
+                isRefund ? '¡Recuperaste tu apuesta!' : '¡GANASTE!'
+            }</h4>
             <p style="color: #fff; margin: 5px 0; font-size: 1.1em;"><strong>Categoría:</strong> ${
                 balotoPrize.category
             }</p>
@@ -1714,8 +1717,8 @@ function validateBalotoIntegrated() {
 
         resultHTML += `<div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
             <h4 style="color: #fff; margin: 0 0 10px 0;">${trophy} ${
-            isRefund ? '¡Recuperaste tu apuesta!' : '¡GANASTE!'
-        }</h4>
+                isRefund ? '¡Recuperaste tu apuesta!' : '¡GANASTE!'
+            }</h4>
             <p style="color: #fff; margin: 5px 0; font-size: 1.1em;"><strong>Categoría:</strong> ${
                 revanchaPrize.category
             }</p>
@@ -2569,3 +2572,319 @@ function fallbackCopyToClipboard(text) {
 
     document.body.removeChild(textArea);
 }
+// ========================================
+// FUNCIONES DE SORTEOS HISTÓRICOS
+// ========================================
+
+// Variables globales para almacenar sorteos históricos
+let balotoHistoricalSorteos = [];
+let milotoHistoricalSorteos = [];
+let colorlotoHistoricalSorteos = [];
+
+// Cargar lista de sorteos históricos al inicio
+async function loadHistoricalSorteos() {
+    try {
+        // Cargar Baloto
+        const balotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Baloto?limit=30`);
+        if (balotoResponse.ok) {
+            const data = await balotoResponse.json();
+            if (data.success) {
+                balotoHistoricalSorteos = data.sorteos;
+                populateBalotoSelector();
+            }
+        }
+
+        // Cargar Miloto
+        const milotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Miloto?limit=30`);
+        if (milotoResponse.ok) {
+            const data = await milotoResponse.json();
+            if (data.success) {
+                milotoHistoricalSorteos = data.sorteos;
+                populateMilotoSelector();
+            }
+        }
+
+        // Cargar Colorloto
+        const colorlotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Colorloto?limit=30`);
+        if (colorlotoResponse.ok) {
+            const data = await colorlotoResponse.json();
+            if (data.success) {
+                colorlotoHistoricalSorteos = data.sorteos;
+                populateColorlotoSelector();
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando sorteos históricos:', error);
+    }
+}
+
+// Poblar selectores con sorteos
+function populateBalotoSelector() {
+    const selector = document.getElementById('baloto-sorteo-selector');
+    if (!selector) return;
+
+    // Ordenar sorteos de más reciente a más antiguo
+    const sorteosOrdenados = [...balotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+
+    selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
+    sorteosOrdenados.forEach(sorteo => {
+        const option = document.createElement('option');
+        option.value = sorteo.sorteo;
+        option.style.color = 'inherit';
+        option.textContent = `Sorteo ${sorteo.sorteo} - ${sorteo.fecha}`;
+        selector.appendChild(option);
+    });
+}
+
+function populateMilotoSelector() {
+    const selector = document.getElementById('miloto-sorteo-selector');
+    if (!selector) return;
+
+    // Ordenar sorteos de más reciente a más antiguo
+    const sorteosOrdenados = [...milotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+
+    selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
+    sorteosOrdenados.forEach(sorteo => {
+        const option = document.createElement('option');
+        option.value = sorteo.sorteo;
+        option.style.color = 'inherit';
+        option.textContent = `Sorteo ${sorteo.sorteo} - ${sorteo.fecha}`;
+        selector.appendChild(option);
+    });
+}
+
+function populateColorlotoSelector() {
+    const selector = document.getElementById('colorloto-sorteo-selector');
+    if (!selector) return;
+
+    // Ordenar sorteos de más reciente a más antiguo
+    const sorteosOrdenados = [...colorlotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+
+    selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
+    sorteosOrdenados.forEach(sorteo => {
+        const option = document.createElement('option');
+        option.value = sorteo.sorteo;
+        option.style.color = 'inherit';
+        option.textContent = `Sorteo ${sorteo.sorteo} - ${sorteo.fecha}`;
+        selector.appendChild(option);
+    });
+}
+
+// Toggle visibilidad de selectores
+function toggleBalotoHistoricalSelector() {
+    const selector = document.getElementById('baloto-sorteo-selector');
+    const isHistorical = document.querySelector('input[name="baloto-sorteo-type"]:checked').value === 'historical';
+
+    if (selector) {
+        selector.classList.toggle('hidden', !isHistorical);
+        if (isHistorical && selector.value) {
+            loadHistoricalBalotoResult(selector.value);
+        }
+    }
+}
+
+function toggleMilotoHistoricalSelector() {
+    const selector = document.getElementById('miloto-sorteo-selector');
+    const isHistorical = document.querySelector('input[name="miloto-sorteo-type"]:checked').value === 'historical';
+
+    if (selector) {
+        selector.classList.toggle('hidden', !isHistorical);
+        if (isHistorical && selector.value) {
+            loadHistoricalMilotoResult(selector.value);
+        }
+    }
+}
+
+function toggleColorlotoHistoricalSelector() {
+    const selector = document.getElementById('colorloto-sorteo-selector');
+    const isHistorical = document.querySelector('input[name="colorloto-sorteo-type"]:checked').value === 'historical';
+
+    if (selector) {
+        selector.classList.toggle('hidden', !isHistorical);
+        if (isHistorical && selector.value) {
+            loadHistoricalColorlotoResult(selector.value);
+        }
+    }
+}
+
+// Cargar resultado histórico específico
+async function loadHistoricalBalotoResult(sorteoId) {
+    try {
+        // Cargar Baloto y Revancha en paralelo
+        const [balotoResponse, revanchaResponse] = await Promise.all([
+            fetch(`${LOCAL_SERVER_URL}/api/history/Baloto/${sorteoId}`),
+            fetch(`${LOCAL_SERVER_URL}/api/history/${encodeURIComponent('Baloto Revancha')}/${sorteoId}`),
+        ]);
+
+        const balotoData = await balotoResponse.json();
+        let revanchaData = { success: false };
+
+        if (revanchaResponse.ok) {
+            revanchaData = await revanchaResponse.json();
+        }
+
+        // Cargar resultados de Baloto
+        if (balotoData.success) {
+            const ballsDisplay = document.getElementById('baloto-results-display');
+            if (ballsDisplay) {
+                const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+                balotoData.sorteo.numeros.forEach((num, index) => {
+                    if (balls[index]) {
+                        balls[index].textContent = num.toString().padStart(2, '0');
+                        balls[index].classList.remove('empty');
+                    }
+                });
+
+                if (balls[5] && balotoData.sorteo.superBalota) {
+                    balls[5].textContent = balotoData.sorteo.superBalota.toString().padStart(2, '0');
+                    balls[5].classList.remove('empty');
+                }
+            }
+
+            const sorteoInfoElement = document.getElementById('sorteo-info');
+            if (sorteoInfoElement) {
+                sorteoInfoElement.innerHTML = `<span class="sorteo-numero">🎲 Sorteo #${balotoData.sorteo.sorteo}</span><span class="sorteo-fecha">📅 ${balotoData.sorteo.fecha}</span>`;
+                sorteoInfoElement.style.display = 'flex';
+            }
+        }
+
+        // Cargar resultados de Revancha
+        if (revanchaData.success) {
+            const ballsDisplay = document.getElementById('baloto-revancha-results-display');
+            if (ballsDisplay) {
+                const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+                revanchaData.sorteo.numeros.forEach((num, index) => {
+                    if (balls[index]) {
+                        balls[index].textContent = num.toString().padStart(2, '0');
+                        balls[index].classList.remove('empty');
+                    }
+                });
+
+                if (balls[5] && revanchaData.sorteo.superBalota) {
+                    balls[5].textContent = revanchaData.sorteo.superBalota.toString().padStart(2, '0');
+                    balls[5].classList.remove('empty');
+                }
+            }
+
+            const sorteoInfoElement = document.getElementById('sorteo-revancha-info');
+            if (sorteoInfoElement) {
+                sorteoInfoElement.innerHTML = `<span class="sorteo-numero">🎯 Sorteo #${revanchaData.sorteo.sorteo}</span><span class="sorteo-fecha">📅 ${revanchaData.sorteo.fecha}</span>`;
+                sorteoInfoElement.style.display = 'flex';
+            }
+        }
+
+        if (balotoData.success || revanchaData.success) {
+            Toast.success(
+                `Sorteo histórico #${sorteoId} cargado (Baloto ${balotoData.success ? '✓' : '✗'} / Revancha ${revanchaData.success ? '✓' : '✗'})`,
+                3000
+            );
+        } else {
+            Toast.warning('No se encontraron datos para este sorteo');
+        }
+    } catch (error) {
+        console.error('Error cargando sorteo histórico:', error);
+        Toast.error('Error al cargar sorteo histórico');
+    }
+}
+
+async function loadHistoricalMilotoResult(sorteoId) {
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/history/Miloto/${sorteoId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const ballsDisplay = document.getElementById('miloto-results-display');
+            if (ballsDisplay) {
+                const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+                data.sorteo.numeros.forEach((num, index) => {
+                    if (balls[index]) {
+                        balls[index].textContent = num.toString().padStart(2, '0');
+                        balls[index].classList.remove('empty');
+                    }
+                });
+            }
+
+            const sorteoInfoElement = document.getElementById('sorteo-miloto-info');
+            if (sorteoInfoElement) {
+                sorteoInfoElement.innerHTML = `<span class="sorteo-numero">🎲 Sorteo #${data.sorteo.sorteo}</span><span class="sorteo-fecha">📅 ${data.sorteo.fecha}</span>`;
+                sorteoInfoElement.style.display = 'flex';
+            }
+
+            Toast.success(`Sorteo histórico #${sorteoId} cargado`, 2000);
+        }
+    } catch (error) {
+        console.error('Error cargando sorteo histórico:', error);
+        Toast.error('Error al cargar sorteo histórico');
+    }
+}
+
+async function loadHistoricalColorlotoResult(sorteoId) {
+    try {
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/history/Colorloto/${sorteoId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const ballsDisplay = document.getElementById('colorloto-results-display');
+            if (ballsDisplay && data.sorteo.colorNumberPairs) {
+                const balls = ballsDisplay.querySelectorAll('.result-ball');
+
+                data.sorteo.colorNumberPairs.forEach((pair, index) => {
+                    if (balls[index]) {
+                        balls[index].className = 'result-ball';
+                        balls[index].classList.add(`colorloto-${pair.color}`);
+                        balls[index].setAttribute('data-color', pair.color);
+                        balls[index].textContent = pair.number.toString();
+                    }
+                });
+            }
+
+            const sorteoInfoElement = document.getElementById('sorteo-colorloto-info');
+            if (sorteoInfoElement) {
+                sorteoInfoElement.innerHTML = `<span class="sorteo-numero">🎲 Sorteo #${data.sorteo.sorteo}</span><span class="sorteo-fecha">📅 ${data.sorteo.fecha}</span>`;
+                sorteoInfoElement.style.display = 'flex';
+            }
+
+            Toast.success(`Sorteo histórico #${sorteoId} cargado`, 2000);
+        }
+    } catch (error) {
+        console.error('Error cargando sorteo histórico:', error);
+        Toast.error('Error al cargar sorteo histórico');
+    }
+}
+
+// Listeners para selectores
+document.addEventListener('DOMContentLoaded', () => {
+    // Cargar sorteos históricos al inicio
+    loadHistoricalSorteos();
+
+    // Listeners para cambios en selectores
+    const balotoSelector = document.getElementById('baloto-sorteo-selector');
+    if (balotoSelector) {
+        balotoSelector.addEventListener('change', e => {
+            if (e.target.value) {
+                loadHistoricalBalotoResult(e.target.value);
+            }
+        });
+    }
+
+    const milotoSelector = document.getElementById('miloto-sorteo-selector');
+    if (milotoSelector) {
+        milotoSelector.addEventListener('change', e => {
+            if (e.target.value) {
+                loadHistoricalMilotoResult(e.target.value);
+            }
+        });
+    }
+
+    const colorlotoSelector = document.getElementById('colorloto-sorteo-selector');
+    if (colorlotoSelector) {
+        colorlotoSelector.addEventListener('change', e => {
+            if (e.target.value) {
+                loadHistoricalColorlotoResult(e.target.value);
+            }
+        });
+    }
+});
