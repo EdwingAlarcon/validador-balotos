@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Test Modo Oscuro - Contraste de Textos</title>
+        <link rel="stylesheet" href="css/styles.css?v=7" />
+        <style>
+            .test-section {
+                padding: 20px;
+                margin: 20px;
+                background: var(--bg-section);
+                border-radius: 10px;
+                border: 2px solid var(--border-section);
+            }
+            .test-item {
+                margin: 10px 0;
+                padding: 10px;
+                background: var(--bg-container);
+                border-radius: 5px;
+            }
+            .color-info {
+                font-size: 12px;
+                opacity: 0.7;
+                margin-left: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🌙 Prueba de Modo Oscuro</h1>
+                <p>Verificación de contraste y visibilidad de textos</p>
+            </header>
+
+            <div class="test-section">
+                <h2>Variables de Texto Principales</h2>
+                <div class="test-item">
+                    <span style="color: var(--text-primary)">--text-primary: Texto principal (#ffffff)</span>
+                    <span class="color-info">Debe ser blanco puro</span>
+                </div>
+                <div class="test-item">
+                    <span style="color: var(--text-secondary)">--text-secondary: Texto secundario (#e5e7eb)</span>
+                    <span class="color-info">Debe ser gris muy claro</span>
+                </div>
+                <div class="test-item">
+                    <span style="color: var(--text-muted)">--text-muted: Texto apagado (#d1d5db)</span>
+                    <span class="color-info">Debe ser gris claro</span>
+                </div>
+                <div class="test-item">
+                    <span style="color: var(--accent-color)">--accent-color: Color de acento (#93c5fd)</span>
+                    <span class="color-info">Debe ser azul claro</span>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2 class="section h2">Títulos y Encabezados</h2>
+                <h3>Este es un h3</h3>
+                <p class="description">Esta es una descripción con <span>texto resaltado</span></p>
+                <strong>Texto en negrita (strong)</strong><br />
+                <em>Texto en cursiva (em)</em><br />
+                <b>Texto en negrita (b)</b>
+            </div>
+
+            <div class="test-section">
+                <h2>Información de Sorteo</h2>
+                <div class="sorteo-info">
+                    <span>📅 Sorteo #12345</span>
+                    <span class="sorteo-acumulado">💰 Acumulado: $5,000,000</span>
+                </div>
+                <div class="helper-text">⚠️ Este es un texto de ayuda importante</div>
+            </div>
+
+            <div class="test-section">
+                <h2>Botones</h2>
+                <button class="btn-primary">Botón Primario</button>
+                <button class="btn-secondary">Botón Secundario</button>
+                <button class="btn-intelligent">Botón Inteligente</button>
+            </div>
+
+            <div class="test-section">
+                <h2>Resultados</h2>
+                <div class="result-container loser show">
+                    <h3>No ganaste esta vez</h3>
+                    <div class="result-details">
+                        <p>Coincidencias: <strong>2 números</strong></p>
+                        <p>Sigue intentando</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>Inputs y Controles</h2>
+                <input type="number" class="number-input" placeholder="Número" value="15" />
+                <select class="color-select">
+                    <option>Rojo</option>
+                    <option>Azul</option>
+                    <option>Verde</option>
+                </select>
+            </div>
+
+            <div class="test-section">
+                <h2>Tabs</h2>
+                <div class="tabs">
+                    <button class="tab-button">Tab Normal</button>
+                    <button class="tab-button active">Tab Activo</button>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>Tabla de Frecuencia (Simulada)</h2>
+                <table style="width: 100%; color: var(--text-primary)">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color)">
+                                Número
+                            </th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color)">
+                                Frecuencia
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-section)">15</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-section)">
+                                <strong>42 veces</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-section)">23</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-section)">
+                                <strong>38 veces</strong>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="test-section">
+                <h2>Lista de Elementos</h2>
+                <ul style="list-style-position: inside">
+                    <li>Elemento de lista 1</li>
+                    <li>Elemento de lista 2</li>
+                    <li>Elemento de lista 3</li>
+                </ul>
+            </div>
+        </div>
+
+        <script>
+            // Verificación automática de contraste
+            document.addEventListener('DOMContentLoaded', function () {
+                const styles = getComputedStyle(document.documentElement);
+                console.log('🎨 VERIFICACIÓN DE VARIABLES CSS EN MODO OSCURO:');
+                console.log('--text-primary:', styles.getPropertyValue('--text-primary').trim());
+                console.log('--text-secondary:', styles.getPropertyValue('--text-secondary').trim());
+                console.log('--text-muted:', styles.getPropertyValue('--text-muted').trim());
+                console.log('--accent-color:', styles.getPropertyValue('--accent-color').trim());
+                console.log('--bg-container:', styles.getPropertyValue('--bg-container').trim());
+                console.log('--bg-section:', styles.getPropertyValue('--bg-section').trim());
+
+                // Verificar que el tema esté en dark
+                const theme = document.documentElement.getAttribute('data-theme');
+                console.log('🌙 Tema activo:', theme);
+
+                if (theme === 'dark') {
+                    console.log('✅ Modo oscuro activado correctamente');
+                } else {
+                    console.log('❌ ERROR: Modo oscuro NO está activado');
+                }
+            });
+        </script>
+    </body>
+</html>

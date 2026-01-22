@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Test Variables CSS - Modo Oscuro</title>
+        <link rel="stylesheet" href="css/styles.css?v=8" />
+        <style>
+            body {
+                padding: 20px;
+            }
+            .test-box {
+                padding: 20px;
+                margin: 20px 0;
+                border: 2px solid;
+                border-radius: 10px;
+            }
+            .variable-test {
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .diagnostic {
+                background: #000;
+                color: #0f0;
+                padding: 10px;
+                font-family: monospace;
+                margin: 10px 0;
+                border-radius: 5px;
+                white-space: pre-wrap;
+            }
+            .test-results {
+                margin-top: 30px;
+                padding: 20px;
+                background: #1a1a1a;
+                color: #fff;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 style="color: var(--text-primary)">🧪 Test de Variables CSS - Modo Oscuro</h1>
+
+        <div class="test-box" style="background: var(--bg-container); border-color: var(--border-color)">
+            <h2 style="color: var(--text-primary)">Prueba de Variables de Texto</h2>
+
+            <div class="variable-test" style="background: var(--bg-section); color: var(--text-primary)">
+                --text-primary: Este texto debe ser BLANCO (#ffffff)
+            </div>
+
+            <div class="variable-test" style="background: var(--bg-section); color: var(--text-secondary)">
+                --text-secondary: Este texto debe ser GRIS MUY CLARO (#e5e7eb)
+            </div>
+
+            <div class="variable-test" style="background: var(--bg-section); color: var(--text-muted)">
+                --text-muted: Este texto debe ser GRIS CLARO (#d1d5db)
+            </div>
+
+            <div class="variable-test" style="background: var(--bg-section); color: var(--accent-color)">
+                --accent-color: Este texto debe ser AZUL CLARO (#93c5fd)
+            </div>
+        </div>
+
+        <div class="test-box" style="background: var(--bg-container); border-color: var(--border-color)">
+            <h2 style="color: var(--text-primary)">Prueba de Backgrounds</h2>
+
+            <div
+                class="variable-test"
+                style="
+                    background: var(--bg-container);
+                    color: var(--text-primary);
+                    border: 2px solid var(--border-color);
+                "
+            >
+                --bg-container: Fondo debe ser #1e1e2f (oscuro)
+            </div>
+
+            <div class="variable-test" style="background: var(--bg-section); color: var(--text-primary)">
+                --bg-section: Fondo debe ser #252537 (un poco más claro)
+            </div>
+
+            <div class="variable-test" style="background: var(--bg-input); color: var(--text-primary)">
+                --bg-input: Fondo debe ser #2a2a3e (para inputs)
+            </div>
+        </div>
+
+        <div class="test-results">
+            <h2>📊 Diagnóstico Automático</h2>
+            <div id="results"></div>
+        </div>
+
+        <script>
+            function runDiagnostics() {
+                const html = document.documentElement;
+                const theme = html.getAttribute('data-theme');
+                const styles = getComputedStyle(html);
+
+                const results = document.getElementById('results');
+                let diagnostics = '';
+
+                diagnostics += `🎨 TEMA ACTUAL: ${theme}\n`;
+                diagnostics += `${theme === 'dark' ? '✅' : '❌'} El atributo data-theme está en "${theme}"\n\n`;
+
+                diagnostics += `📝 VARIABLES CSS COMPUTADAS:\n`;
+                diagnostics += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+                const variables = [
+                    '--text-primary',
+                    '--text-secondary',
+                    '--text-muted',
+                    '--accent-color',
+                    '--bg-container',
+                    '--bg-section',
+                    '--bg-input',
+                    '--border-color',
+                ];
+
+                const expectedDark = {
+                    '--text-primary': '#ffffff',
+                    '--text-secondary': '#e5e7eb',
+                    '--text-muted': '#d1d5db',
+                    '--accent-color': '#93c5fd',
+                    '--bg-container': '#1e1e2f',
+                    '--bg-section': '#252537',
+                    '--bg-input': '#2a2a3e',
+                    '--border-color': '#3a3a4e',
+                };
+
+                let allCorrect = true;
+
+                variables.forEach(varName => {
+                    const value = styles.getPropertyValue(varName).trim();
+                    const expected = expectedDark[varName];
+                    const isCorrect =
+                        value.toLowerCase() === expected.toLowerCase() ||
+                        value.toLowerCase().replace(/\s/g, '') === expected.toLowerCase().replace(/\s/g, '');
+
+                    if (!isCorrect) allCorrect = false;
+
+                    diagnostics += `${isCorrect ? '✅' : '❌'} ${varName}\n`;
+                    diagnostics += `   Esperado: ${expected}\n`;
+                    diagnostics += `   Actual:   ${value}\n\n`;
+                });
+
+                diagnostics += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                diagnostics += allCorrect ? '✅ TODAS LAS VARIABLES SON CORRECTAS\n' : '❌ HAY VARIABLES INCORRECTAS\n';
+                diagnostics += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+                // Verificar que el CSS está cargado
+                diagnostics += `📦 INFORMACIÓN DEL CSS:\n`;
+                const styleSheets = Array.from(document.styleSheets);
+                const cssFile = styleSheets.find(sheet => sheet.href && sheet.href.includes('styles.css'));
+
+                if (cssFile) {
+                    diagnostics += `✅ Archivo CSS cargado: ${cssFile.href}\n`;
+                    try {
+                        diagnostics += `✅ Reglas CSS: ${cssFile.cssRules.length}\n`;
+                    } catch (e) {
+                        diagnostics += `⚠️  No se puede acceder a las reglas CSS (CORS)\n`;
+                    }
+                } else {
+                    diagnostics += `❌ No se encontró el archivo styles.css\n`;
+                }
+
+                // Test de color real en elemento
+                diagnostics += `\n🎯 TEST DE COLOR RENDERIZADO:\n`;
+                const testDiv = document.createElement('div');
+                testDiv.style.color = 'var(--text-primary)';
+                document.body.appendChild(testDiv);
+                const computedColor = getComputedStyle(testDiv).color;
+                document.body.removeChild(testDiv);
+
+                diagnostics += `Color renderizado de --text-primary: ${computedColor}\n`;
+                const isWhite = computedColor === 'rgb(255, 255, 255)';
+                diagnostics += `${isWhite ? '✅' : '❌'} El color se renderiza como blanco\n`;
+
+                results.innerHTML = `<div class="diagnostic">${diagnostics}</div>`;
+
+                // También mostrar en consola
+                console.log(diagnostics);
+            }
+
+            // Ejecutar diagnóstico cuando cargue la página
+            document.addEventListener('DOMContentLoaded', runDiagnostics);
+
+            // Botón para cambiar tema y reejecutar
+            const toggleBtn = document.createElement('button');
+            toggleBtn.textContent = '🔄 Cambiar a Modo Claro';
+            toggleBtn.style.cssText =
+                'position: fixed; top: 20px; right: 20px; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 10px; background: #667eea; color: white; border: none; font-weight: bold;';
+            toggleBtn.onclick = function () {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                this.textContent = newTheme === 'dark' ? '🔄 Cambiar a Modo Claro' : '🔄 Cambiar a Modo Oscuro';
+                setTimeout(runDiagnostics, 100);
+            };
+            document.body.appendChild(toggleBtn);
+        </script>
+    </body>
+</html>

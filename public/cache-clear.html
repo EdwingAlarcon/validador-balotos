@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>🔧 Herramienta de Limpieza de Caché</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .container {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                max-width: 600px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            }
+
+            h1 {
+                color: #667eea;
+                margin-bottom: 20px;
+                font-size: 2rem;
+            }
+
+            .info {
+                background: #f0f4ff;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+                border-left: 4px solid #667eea;
+            }
+
+            .step {
+                margin: 15px 0;
+                padding: 15px;
+                background: #f9f9f9;
+                border-radius: 8px;
+            }
+
+            .step-number {
+                background: #667eea;
+                color: white;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                margin-right: 10px;
+            }
+
+            .button {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 1.1rem;
+                cursor: pointer;
+                font-weight: bold;
+                margin: 10px 5px;
+                transition: all 0.3s ease;
+            }
+
+            .button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            }
+
+            .warning {
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+
+            .success {
+                background: #d4edda;
+                border-left: 4px solid #28a745;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                display: none;
+            }
+
+            code {
+                background: #2d2d2d;
+                color: #0f0;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: 'Courier New', monospace;
+            }
+
+            kbd {
+                background: #2d2d2d;
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-family: 'Courier New', monospace;
+                border: 1px solid #555;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔧 Limpieza de Caché del Navegador</h1>
+
+            <div class="info">
+                <strong>⚠️ Problema Detectado:</strong>
+                <p>El modo oscuro no se está aplicando debido a caché del navegador antiguo.</p>
+            </div>
+
+            <h2 style="color: #333; margin: 30px 0 15px 0">📋 Soluciones Rápidas:</h2>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Recarga Forzada (Más Rápido)</strong>
+                <p>Presiona: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (Windows/Linux)</p>
+                <p>o <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (Mac)</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Abrir en Modo Incógnito/Privado</strong>
+                <p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> (Chrome/Edge)</p>
+                <p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> (Firefox)</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Limpiar Caché Completo</strong>
+                <p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Delete</kbd></p>
+                <p>Selecciona "Caché" o "Archivos temporales" y confirma.</p>
+            </div>
+
+            <h2 style="color: #333; margin: 30px 0 15px 0">🧪 Pasos de Verificación:</h2>
+
+            <div class="warning">
+                <strong>🔍 Para verificar que el CSS se cargó correctamente:</strong>
+                <ol style="margin-left: 20px; margin-top: 10px">
+                    <li>Presiona <kbd>F12</kbd> para abrir DevTools</li>
+                    <li>Ve a la pestaña <strong>Network</strong> (Red)</li>
+                    <li>Busca <code>styles.css?v=8</code></li>
+                    <li>Verifica que NO venga de caché (debe decir "200" o "304" sin "(from cache)")</li>
+                </ol>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px">
+                <button class="button" onclick="forceReload()">🔄 Forzar Recarga Ahora</button>
+                <button class="button" onclick="openTest()">🧪 Abrir Prueba de Variables</button>
+                <button class="button" onclick="openMain()">🏠 Ir a Aplicación Principal</button>
+            </div>
+
+            <div id="success" class="success">
+                <strong>✅ Recarga Forzada Ejecutada</strong>
+                <p>El navegador recargará la página ignorando el caché...</p>
+            </div>
+
+            <div class="info" style="margin-top: 30px">
+                <strong>📝 Versión Actual del CSS:</strong> <code>v=8</code><br />
+                <strong>🕐 Última actualización:</strong> <span id="timestamp"></span>
+            </div>
+
+            <h2 style="color: #333; margin: 30px 0 15px 0">🔎 Verificación del Tema:</h2>
+
+            <div style="padding: 20px; background: #f9f9f9; border-radius: 10px">
+                <p><strong>Tema actual del sistema:</strong> <span id="current-theme">Detectando...</span></p>
+                <p style="margin-top: 10px">
+                    <strong>Tema guardado:</strong> <span id="saved-theme">Verificando...</span>
+                </p>
+            </div>
+        </div>
+
+        <script>
+            // Mostrar timestamp
+            document.getElementById('timestamp').textContent = new Date().toLocaleString('es-ES');
+
+            // Detectar tema del sistema
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.getElementById('current-theme').textContent = prefersDark ? '🌙 Oscuro' : '☀️ Claro';
+
+            // Verificar tema guardado
+            const savedTheme = localStorage.getItem('theme');
+            document.getElementById('saved-theme').textContent = savedTheme
+                ? `${savedTheme === 'dark' ? '🌙' : '☀️'} ${savedTheme}`
+                : 'No configurado';
+
+            function forceReload() {
+                document.getElementById('success').style.display = 'block';
+                setTimeout(() => {
+                    location.reload(true);
+                }, 1000);
+            }
+
+            function openTest() {
+                window.open('test-variables.html', '_blank');
+            }
+
+            function openMain() {
+                window.location.href = 'index.html';
+            }
+
+            // Diagnóstico automático
+            console.log('🔧 DIAGNÓSTICO DE CACHÉ:');
+            console.log('Versión CSS esperada: v=8');
+            console.log('Tema del sistema:', prefersDark ? 'dark' : 'light');
+            console.log('Tema guardado:', savedTheme || 'ninguno');
+            console.log('User Agent:', navigator.userAgent);
+        </script>
+    </body>
+</html>
