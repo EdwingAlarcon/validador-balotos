@@ -1956,9 +1956,19 @@ kbd {
 }
 
 /* Textos en inputs y selects */
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] select option {
+[data-theme="dark"] input::placeholder {
     color: #9ca3af;
+}
+
+/* Estilos mejorados para select y options en modo oscuro */
+[data-theme="dark"] select {
+    background-color: var(--bg-input) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] select option {
+    background-color: #1e1e2f !important;
+    color: #ffffff !important;
 }
 
 /* Iconos y elementos visuales */
@@ -3026,8 +3036,21 @@ html[data-theme='dark'] .sorteo-dropdown {
 }
 
 html[data-theme='dark'] .sorteo-dropdown option {
-    background: #2d2d2d !important;
+    background: #1e1e2f !important;
     color: #ffffff !important;
+    padding: 12px;
+}
+
+/* Asegurar contraste en el dropdown cuando está abierto */
+html[data-theme='dark'] select.sorteo-dropdown option {
+    background-color: #1e1e2f !important;
+    color: #ffffff !important;
+}
+
+html[data-theme='dark'] select.sorteo-dropdown option:hover,
+html[data-theme='dark'] select.sorteo-dropdown option:checked {
+    background-color: #2a2a3e !important;
+    color: #93c5fd !important;
 }
 
 /* Sobrescribir cualquier regla que ponga texto negro */
