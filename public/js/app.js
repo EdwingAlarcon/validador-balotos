@@ -1522,6 +1522,11 @@ function validateBalotoIntegrated() {
     const userNumbers = getInputValues('.baloto-number');
     const userSuper = parseInt(document.querySelector('.baloto-super').value);
 
+    // Verificar si se está validando contra sorteo histórico
+    const isHistorical = document.querySelector('input[name="baloto-sorteo-type"]:checked')?.value === 'historical';
+    const sorteoSelector = document.getElementById('baloto-sorteo-selector');
+    const selectedSorteo = isHistorical && sorteoSelector ? sorteoSelector.value : null;
+
     // Validar entrada del usuario
     if (userNumbers.length !== 5 || isNaN(userSuper)) {
         Toast.warning('Por favor, completa todos tus números (5 números + Súper Balota)', 3000);
@@ -1573,12 +1578,18 @@ function validateBalotoIntegrated() {
 
     // Validar que tengamos los resultados
     if (balotoResultNumbers.length !== 5 || isNaN(balotoResultSuper)) {
-        Toast.warning('Por favor, carga los resultados oficiales de Baloto primero', 3000);
+        const mensaje = isHistorical
+            ? 'Por favor, selecciona un sorteo histórico primero'
+            : 'Por favor, carga los resultados oficiales de Baloto primero';
+        Toast.warning(mensaje, 3000);
         return;
     }
 
     if (revanchaResultNumbers.length !== 5 || isNaN(revanchaResultSuper)) {
-        Toast.warning('Por favor, carga los resultados oficiales de Revancha primero', 3000);
+        const mensaje = isHistorical
+            ? 'Por favor, selecciona un sorteo histórico que tenga datos de Revancha'
+            : 'Por favor, carga los resultados oficiales de Revancha primero';
+        Toast.warning(mensaje, 3000);
         return;
     }
 
@@ -1765,26 +1776,28 @@ function validateBalotoIntegrated() {
     }
 
     // Toast notification
+    const sorteoType = isHistorical && selectedSorteo ? `📜 Sorteo histórico #${selectedSorteo}` : '🎰 Último sorteo';
+
     if (balotoWon && revanchaWon) {
         Toast.success(
-            `¡INCREÍBLE! Ganaste en AMBOS sorteos: $${totalPrize.toLocaleString('es-CO')}`,
+            `¡INCREÍBLE! Ganaste en AMBOS sorteos (${sorteoType}): $${totalPrize.toLocaleString('es-CO')}`,
             8000,
             '🎉 ¡DOBLE PREMIO!'
         );
     } else if (balotoWon) {
         Toast.success(
-            `Ganaste en Baloto: $${balotoPrizeAmount.toLocaleString('es-CO')}`,
+            `Ganaste en Baloto (${sorteoType}): $${balotoPrizeAmount.toLocaleString('es-CO')}`,
             6000,
             '🎰 ¡GANASTE EN BALOTO!'
         );
     } else if (revanchaWon) {
         Toast.success(
-            `Ganaste en Revancha: $${revanchaPrizeAmount.toLocaleString('es-CO')}`,
+            `Ganaste en Revancha (${sorteoType}): $${revanchaPrizeAmount.toLocaleString('es-CO')}`,
             6000,
             '🎯 ¡GANASTE EN REVANCHA!'
         );
     } else {
-        Toast.info('No ganaste en ninguno de los sorteos. ¡Sigue intentando!', 4000);
+        Toast.info(`Validado contra ${sorteoType}. No ganaste en ninguno de los sorteos. ¡Sigue intentando!`, 4000);
     }
 
     // Guardar en historial
@@ -2677,7 +2690,22 @@ function toggleBalotoHistoricalSelector() {
 
     if (selector) {
         selector.classList.toggle('hidden', !isHistorical);
-        if (isHistorical && selector.value) {
+
+        // Actualizar indicador visual en las secciones de resultados
+        const sorteoInfo = document.getElementById('sorteo-info');
+        const sorteoRevanchaInfo = document.getElementById('sorteo-revancha-info');
+
+        if (!isHistorical) {
+            // Si cambia a último sorteo, limpiar info anterior
+            if (sorteoInfo) {
+                sorteoInfo.innerHTML = '';
+                sorteoInfo.style.display = 'none';
+            }
+            if (sorteoRevanchaInfo) {
+                sorteoRevanchaInfo.innerHTML = '';
+                sorteoRevanchaInfo.style.display = 'none';
+            }
+        } else if (isHistorical && selector.value) {
             loadHistoricalBalotoResult(selector.value);
         }
     }
@@ -2689,7 +2717,17 @@ function toggleMilotoHistoricalSelector() {
 
     if (selector) {
         selector.classList.toggle('hidden', !isHistorical);
-        if (isHistorical && selector.value) {
+
+        // Actualizar indicador visual
+        const sorteoInfo = document.getElementById('sorteo-miloto-info');
+
+        if (!isHistorical) {
+            // Si cambia a último sorteo, limpiar info anterior
+            if (sorteoInfo) {
+                sorteoInfo.innerHTML = '';
+                sorteoInfo.style.display = 'none';
+            }
+        } else if (isHistorical && selector.value) {
             loadHistoricalMilotoResult(selector.value);
         }
     }
@@ -2701,7 +2739,17 @@ function toggleColorlotoHistoricalSelector() {
 
     if (selector) {
         selector.classList.toggle('hidden', !isHistorical);
-        if (isHistorical && selector.value) {
+
+        // Actualizar indicador visual
+        const sorteoInfo = document.getElementById('sorteo-colorloto-info');
+
+        if (!isHistorical) {
+            // Si cambia a último sorteo, limpiar info anterior
+            if (sorteoInfo) {
+                sorteoInfo.innerHTML = '';
+                sorteoInfo.style.display = 'none';
+            }
+        } else if (isHistorical && selector.value) {
             loadHistoricalColorlotoResult(selector.value);
         }
     }
@@ -2777,8 +2825,8 @@ async function loadHistoricalBalotoResult(sorteoId) {
 
         if (balotoData.success || revanchaData.success) {
             Toast.success(
-                `Sorteo histórico #${sorteoId} cargado (Baloto ${balotoData.success ? '✓' : '✗'} / Revancha ${revanchaData.success ? '✓' : '✗'})`,
-                3000
+                `📜 Sorteo histórico #${sorteoId} cargado (Baloto ${balotoData.success ? '✓' : '✗'} / Revancha ${revanchaData.success ? '✓' : '✗'})`,
+                4000
             );
         } else {
             Toast.warning('No se encontraron datos para este sorteo');
