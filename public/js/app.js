@@ -713,13 +713,9 @@ async function generateIntelligentBaloto() {
             }
 
             // Mostrar mensaje sobre el método usado
-            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
-            const icon = data.method === 'weighted' ? '🧠' : '🎲';
-            Toast.info(`${icon} Generado usando ${method} (${data.totalSorteos} sorteos en BD)`, 4000);
-
-            if (data.message) {
-                console.log('ℹ️', data.message);
-            }
+            const icon = data.method === 'statistical' ? '🧠' : '🎲';
+            const confidenceText = data.method === 'statistical' ? ` — confianza: ${data.confidence}%` : '';
+            Toast.info(`${icon} Baloto generado con ${data.method === 'statistical' ? 'estadísticas posicionales' : 'números aleatorios'} (${data.totalSorteos} sorteos${confidenceText})`, 4500);
         } else {
             Toast.error('Error al generar números inteligentes');
         }
@@ -757,9 +753,9 @@ async function generateIntelligentBalotoRevancha() {
                 setTimeout(() => balls[5].classList.remove('ball-pop'), 500);
             }
 
-            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
-            const icon = data.method === 'weighted' ? '🧠' : '🎲';
-            Toast.info(`${icon} Revancha generada usando ${method}`, 3000);
+            const icon = data.method === 'statistical' ? '🧠' : '🎲';
+            const confidenceText = data.method === 'statistical' ? ` — confianza: ${data.confidence}%` : '';
+            Toast.info(`${icon} Revancha generada ${data.method === 'statistical' ? 'con estadísticas posicionales' : 'aleatoriamente'} (${data.totalSorteos} sorteos${confidenceText})`, 3500);
         } else {
             Toast.error('Error al generar números inteligentes');
         }
@@ -789,9 +785,9 @@ async function generateIntelligentMiloto() {
                 }
             });
 
-            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
-            const icon = data.method === 'weighted' ? '🧠' : '🎲';
-            Toast.info(`${icon} Miloto generado usando ${method}`, 3000);
+            const icon = data.method === 'statistical' ? '🧠' : '🎲';
+            const confidenceText = data.method === 'statistical' ? ` — confianza: ${data.confidence}%` : '';
+            Toast.info(`${icon} Miloto generado ${data.method === 'statistical' ? 'con estadísticas posicionales' : 'aleatoriamente'} (${data.totalSorteos} sorteos${confidenceText})`, 3500);
         } else {
             Toast.error('Error al generar números inteligentes');
         }
@@ -828,9 +824,9 @@ async function generateIntelligentColorloto() {
                 }
             });
 
-            const method = data.method === 'weighted' ? 'estadísticas' : 'aleatorio';
-            const icon = data.method === 'weighted' ? '🧠' : '🎲';
-            Toast.info(`${icon} Colorloto generado usando ${method}`, 3000);
+            const icon = data.method === 'statistical' ? '🧠' : '🎲';
+            const confidenceText = data.method === 'statistical' ? ` — confianza: ${data.confidence}%` : '';
+            Toast.info(`${icon} Colorloto generado ${data.method === 'statistical' ? 'con estadísticas por color' : 'aleatoriamente'} (${data.totalSorteos} sorteos${confidenceText})`, 3500);
         } else {
             Toast.error('Error al generar números inteligentes');
         }

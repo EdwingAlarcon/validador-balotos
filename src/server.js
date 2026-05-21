@@ -662,10 +662,11 @@ app.get('/api/generate/baloto', (req, res) => {
             superBalota: result.superBalota,
             method: result.method,
             totalSorteos: result.totalSorteos,
+            confidence: result.confidence,
             minRequired: MIN_SORTEOS_FOR_STATISTICS,
             message:
                 result.method === 'statistical'
-                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    ? `Generado con estadísticas posicionales de ${result.totalSorteos} sorteos (confianza: ${result.confidence}%)`
                     : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
         });
     } catch (error) {
@@ -682,10 +683,11 @@ app.get('/api/generate/miloto', (req, res) => {
             numbers: result.numbers,
             method: result.method,
             totalSorteos: result.totalSorteos,
+            confidence: result.confidence,
             minRequired: MIN_SORTEOS_FOR_STATISTICS,
             message:
                 result.method === 'statistical'
-                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    ? `Generado con estadísticas posicionales de ${result.totalSorteos} sorteos (confianza: ${result.confidence}%)`
                     : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
         });
     } catch (error) {
@@ -702,10 +704,11 @@ app.get('/api/generate/colorloto', (req, res) => {
             pairs: result.pairs,
             method: result.method,
             totalSorteos: result.totalSorteos,
+            confidence: result.confidence,
             minRequired: MIN_SORTEOS_FOR_STATISTICS,
             message:
                 result.method === 'statistical'
-                    ? `Generado usando estadísticas de ${result.totalSorteos} sorteos históricos`
+                    ? `Generado con estadísticas por color de ${result.totalSorteos} sorteos (confianza: ${result.confidence}%)`
                     : `Generado aleatoriamente (se necesitan ${MIN_SORTEOS_FOR_STATISTICS} sorteos para usar estadísticas, actuales: ${result.totalSorteos})`,
         });
     } catch (error) {
