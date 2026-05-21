@@ -2265,7 +2265,7 @@ function fallbackCopyToClipboard(text) {
 // ========================================
 
 async function loadStatisticsData(event) {
-    if (event) event.target.disabled = true;
+    if (event && event.target) event.target.disabled = true;
     const container = document.getElementById('stats-container');
     if (!container) return;
     container.innerHTML = '<p class="helper-text">Cargando estadísticas...</p>';
@@ -2275,20 +2275,16 @@ async function loadStatisticsData(event) {
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Error');
 
-        const s = data.statistics;
-        const topN = (freq, n) =>
-            Object.entries(freq)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, n);
-
-        function renderBars(entries, colorClass) {
-            if (!entries.length) return '<p class="helper-text">Sin datos</p>';
-            const max = entries[0][1] || 1;
-            return entries
-                .map(([num, count]) => {
+        // La API devuelve: data.totals, data.baloto.top10, data.miloto.top10
+        // top10 es un array de { number, count }
+        function renderBars(top10, colorClass) {
+            if (!top10 || !top10.length) return '<p class="helper-text">Sin datos suficientes</p>';
+            const max = top10[0].count || 1;
+            return top10
+                .map(({ number, count }) => {
                     const pct = Math.round((count / max) * 100);
                     return `<div class="stat-bar-row">
-                        <span class="stat-bar-label">${num}</span>
+                        <span class="stat-bar-label">${number}</span>
                         <div class="stat-bar-track"><div class="stat-bar-fill ${colorClass}" style="width:${pct}%"></div></div>
                         <span class="stat-bar-count">${count}</span>
                     </div>`;
@@ -2296,25 +2292,30 @@ async function loadStatisticsData(event) {
                 .join('');
         }
 
+        const totals = data.totals || {};
         container.innerHTML = `
             <div class="stats-summary">
-                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Baloto || 0}</div><div class="stat-card-label">Sorteos Baloto</div></div>
-                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Miloto || 0}</div><div class="stat-card-label">Sorteos Miloto</div></div>
-                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Colorloto || 0}</div><div class="stat-card-label">Sorteos Colorloto</div></div>
+                <div class="stat-card"><div class="stat-card-value">${totals.baloto ?? 0}</div><div class="stat-card-label">Sorteos Baloto</div></div>
+                <div class="stat-card"><div class="stat-card-value">${totals.miloto ?? 0}</div><div class="stat-card-label">Sorteos Miloto</div></div>
+                <div class="stat-card"><div class="stat-card-value">${totals.colorloto ?? 0}</div><div class="stat-card-label">Sorteos Colorloto</div></div>
             </div>
             <div class="stats-chart-section">
-                <h3>🎰 Baloto — Top 10 números</h3>
-                <div class="stats-bars">${renderBars(topN(s.frequency?.Baloto || {}, 10), 'baloto-bar')}</div>
+                <h3>🎰 Baloto — Top 10 números más frecuentes</h3>
+                ${data.baloto?.hasEnoughData
+                    ? `<div class="stats-bars">${renderBars(data.baloto.top10, 'baloto-bar')}</div>`
+                    : `<p class="helper-text">Se necesitan al menos ${data.minRequired} sorteos (actuales: ${totals.baloto ?? 0})</p>`}
             </div>
             <div class="stats-chart-section">
-                <h3>🎱 Miloto — Top 10 números</h3>
-                <div class="stats-bars">${renderBars(topN(s.frequency?.Miloto || {}, 10), 'miloto-bar')}</div>
+                <h3>🎱 Miloto — Top 10 números más frecuentes</h3>
+                ${data.miloto?.hasEnoughData
+                    ? `<div class="stats-bars">${renderBars(data.miloto.top10, 'miloto-bar')}</div>`
+                    : `<p class="helper-text">Se necesitan al menos ${data.minRequired} sorteos (actuales: ${totals.miloto ?? 0})</p>`}
             </div>
         `;
     } catch (e) {
         container.innerHTML = `<p class="helper-text">Error al cargar estadísticas: ${e.message}</p>`;
     } finally {
-        if (event) event.target.disabled = false;
+        if (event && event.target) event.target.disabled = false;
     }
 }
 
