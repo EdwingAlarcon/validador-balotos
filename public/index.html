@@ -39,6 +39,7 @@
                 <button class="tab-button active" data-tab="baloto">Baloto</button>
                 <button class="tab-button" data-tab="miloto">Miloto</button>
                 <button class="tab-button" data-tab="colorloto">Colorloto</button>
+                <button class="tab-button" data-tab="estadisticas">📊 Estadísticas</button>
             </div>
 
             <!-- Baloto Section - Integrado con Revancha -->
@@ -326,124 +327,34 @@
             <div id="colorloto" class="tab-content">
                 <div class="section">
                     <h2>Colorloto</h2>
-                    <p class="description">Elige 6 colores y asigna a cada uno un número del 1 al 7</p>
+                    <p class="description">Ingresa el número (1-7) para cada color del sorteo</p>
 
                     <div class="input-section">
                         <h3>Tus Colores y Números</h3>
                         <div class="colorloto-grid">
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="0">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="0"
-                                />
+                            <div class="color-number-pair" data-color="amarillo">
+                                <span class="colorloto-ball-label colorloto-amarillo">🟡 Amarillo</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="0" aria-label="Número para Amarillo"/>
                             </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="1">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="1"
-                                />
+                            <div class="color-number-pair" data-color="azul">
+                                <span class="colorloto-ball-label colorloto-azul">🔵 Azul</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="1" aria-label="Número para Azul"/>
                             </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="2">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="2"
-                                />
+                            <div class="color-number-pair" data-color="rojo">
+                                <span class="colorloto-ball-label colorloto-rojo">🔴 Rojo</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="2" aria-label="Número para Rojo"/>
                             </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="3">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="3"
-                                />
+                            <div class="color-number-pair" data-color="verde">
+                                <span class="colorloto-ball-label colorloto-verde">🟢 Verde</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="3" aria-label="Número para Verde"/>
                             </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="4">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="4"
-                                />
+                            <div class="color-number-pair" data-color="blanco">
+                                <span class="colorloto-ball-label colorloto-blanco">⚪ Blanco</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="4" aria-label="Número para Blanco"/>
                             </div>
-                            <div class="color-number-pair">
-                                <select class="color-select-colorloto user-color" data-index="5">
-                                    <option value="">Color</option>
-                                    <option value="amarillo">Amarillo</option>
-                                    <option value="azul">Azul</option>
-                                    <option value="rojo">Rojo</option>
-                                    <option value="verde">Verde</option>
-                                    <option value="blanco">Blanco</option>
-                                    <option value="negro">Negro</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    class="number-input-small user-number"
-                                    min="1"
-                                    max="7"
-                                    placeholder="1-7"
-                                    data-index="5"
-                                />
+                            <div class="color-number-pair" data-color="negro">
+                                <span class="colorloto-ball-label colorloto-negro">⚫ Negro</span>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="5" aria-label="Número para Negro"/>
                             </div>
                         </div>
                     </div>
@@ -529,6 +440,18 @@
             </div>
 
             <!-- Estadísticas Section -->
+            <div id="estadisticas" class="tab-content">
+                <div class="section">
+                    <h2>📊 Estadísticas Históricas</h2>
+                    <p class="description">Frecuencia de números en sorteos históricos almacenados</p>
+                    <div class="api-buttons">
+                        <button class="btn-api" onclick="loadStatisticsData(event)">🔄 Actualizar Estadísticas</button>
+                    </div>
+                    <div id="stats-container">
+                        <p class="helper-text">Haz clic en &quot;Actualizar Estadísticas&quot; para cargar los datos</p>
+                    </div>
+                </div>
+            </div>
 
             <footer>
                 <p>⚠️ Esta aplicación es solo para fines informativos. Verifica los resultados oficiales en:</p>

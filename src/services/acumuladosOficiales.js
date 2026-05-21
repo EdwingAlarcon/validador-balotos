@@ -1,10 +1,24 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 // Caché TTL para evitar requests repetidos a baloto.com
 let _acumuladosCache = null;
 let _acumuladosCacheExpiresAt = 0;
 const ACUMULADOS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+/**
+ * Extrae el valor monetario que sigue a `label` en el HTML crudo.
+ * Mucho más rápido que recorrer el DOM con $('*').each().
+ */
+function parseAcumuladoFromHtml(html, label) {
+    const idx = html.indexOf(label);
+    if (idx === -1) return null;
+    const snippet = html.slice(idx, idx + 300);
+    const match = snippet.match(/\$\s*([\d.,]+)/);
+    if (!match) return null;
+    const raw = match[1].replace(/\./g, '').replace(/,/g, '.');
+    const value = parseFloat(raw);
+    return isNaN(value) ? null : value;
+}
 
 // Función para extraer acumulados del sitio oficial baloto.com
 async function getAcumuladosOficiales() {
@@ -20,56 +34,26 @@ async function getAcumuladosOficiales() {
             timeout: 10000,
         });
 
-        const $ = cheerio.load(response.data);
+        const html = response.data;
         const acumulados = {};
 
-        // Buscar acumulados en el HTML
-        $('*').each((i, el) => {
-            const text = $(el).text().trim();
+        const baloto = parseAcumuladoFromHtml(html, 'ACUMULADO BALOTO');
+        if (baloto !== null) acumulados.baloto = baloto;
 
-            // Buscar ACUMULADO BALOTO (exacto, sin REVANCHA)
-            if (text === 'ACUMULADO BALOTO' && !acumulados.baloto) {
-                const nextText = $(el).next().text().replace(/\s+/g, '');
-                const match = nextText.match(/\$?([\d,\.]+)/);
-                if (match) {
-                    const value = match[1].replace(/\./g, '').replace(/,/g, '.');
-                    acumulados.baloto = parseFloat(value);
-                }
-            }
+        const revancha = parseAcumuladoFromHtml(html, 'ACUMULADO REVANCHA');
+        if (revancha !== null) acumulados.revancha = revancha;
 
-            // Buscar ACUMULADO REVANCHA
-            if (text === 'ACUMULADO REVANCHA' && !acumulados.revancha) {
-                const nextText = $(el).next().text().replace(/\s+/g, '');
-                const match = nextText.match(/\$?([\d,\.]+)/);
-                if (match) {
-                    const value = match[1].replace(/\./g, '').replace(/,/g, '.');
-                    acumulados.revancha = parseFloat(value);
-                }
-            }
+        const miloto = parseAcumuladoFromHtml(html, 'ACUMULADO MILOTO');
+        if (miloto !== null) acumulados.miloto = miloto;
 
-            // Buscar ACUMULADO MILOTO
-            if (text === 'ACUMULADO MILOTO' && !acumulados.miloto) {
-                const nextText = $(el).next().text().replace(/\s+/g, '');
-                const match = nextText.match(/\$?([\d,\.]+)/);
-                if (match) {
-                    const value = match[1].replace(/\./g, '').replace(/,/g, '.');
-                    acumulados.miloto = parseFloat(value);
-                }
-            }
+        const colorloto = parseAcumuladoFromHtml(html, 'ACUMULADO ColorLOTO');
+        if (colorloto !== null) acumulados.colorloto = colorloto;
 
-            // Buscar ACUMULADO ColorLOTO
-            if (text === 'ACUMULADO ColorLOTO' && !acumulados.colorloto) {
-                const nextText = $(el).next().text().replace(/\s+/g, '');
-                const match = nextText.match(/\$?([\d,\.]+)/);
-                if (match) {
-                    const value = match[1].replace(/\./g, '').replace(/,/g, '.');
-                    acumulados.colorloto = parseFloat(value);
-                }
-            }
-        });
-
-        _acumuladosCache = acumulados;
-        _acumuladosCacheExpiresAt = Date.now() + ACUMULADOS_CACHE_TTL_MS;
+        // Solo cachear si obtuvimos al menos un valor real
+        if (Object.keys(acumulados).length > 0) {
+            _acumuladosCache = acumulados;
+            _acumuladosCacheExpiresAt = Date.now() + ACUMULADOS_CACHE_TTL_MS;
+        }
         return acumulados;
     } catch (error) {
         console.error('Error al obtener acumulados de baloto.com:', error.message);

@@ -42,6 +42,7 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_sorteo ON historical_results(sorteo);
         CREATE INDEX IF NOT EXISTS idx_fecha ON historical_results(fecha);
         CREATE INDEX IF NOT EXISTS idx_game_fecha ON historical_results(game, fecha);
+        CREATE INDEX IF NOT EXISTS idx_game_sorteo ON historical_results(game, sorteo);
     `);
 
     console.log('✅ Base de datos inicializada correctamente');
@@ -242,6 +243,5 @@ module.exports = {
     getSuperBalotaFrequency,
     getHotColdNumbers,
     getNumberPairs,
-    deleteAllResults,
     closeDatabase,
 };

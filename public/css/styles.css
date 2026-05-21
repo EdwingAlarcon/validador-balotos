@@ -2633,6 +2633,105 @@ kbd {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* ========================================
+   COLORLOTO — etiquetas de color fijas
+   ======================================== */
+.colorloto-ball-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    user-select: none;
+}
+.colorloto-ball-label.colorloto-amarillo { background: #f0c040; color: #333; text-shadow: none; }
+.colorloto-ball-label.colorloto-azul     { background: #2563eb; }
+.colorloto-ball-label.colorloto-rojo     { background: #dc2626; }
+.colorloto-ball-label.colorloto-verde    { background: #16a34a; }
+.colorloto-ball-label.colorloto-blanco   { background: #e5e7eb; color: #333; text-shadow: none; border: 1px solid #ccc; }
+.colorloto-ball-label.colorloto-negro    { background: #1f2937; }
+
+/* ========================================
+   ESTADÍSTICAS — sección y gráficas de barras
+   ======================================== */
+.stats-summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.stat-card {
+    flex: 1;
+    min-width: 120px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+.stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color, #2563eb);
+}
+.stat-card-label {
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b7280);
+    margin-top: 4px;
+}
+.stats-chart-section {
+    margin-bottom: 24px;
+}
+.stats-chart-section h3 {
+    margin-bottom: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.stats-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.stat-bar-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 40px;
+    align-items: center;
+    gap: 8px;
+}
+.stat-bar-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: right;
+}
+.stat-bar-track {
+    background: var(--border-color, #e5e7eb);
+    border-radius: 4px;
+    height: 16px;
+    overflow: hidden;
+}
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+.stat-bar-count {
+    font-size: 0.78rem;
+    color: var(--text-muted, #6b7280);
+    text-align: right;
+}
+.baloto-bar  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.miloto-bar  { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+[data-theme='dark'] .stat-card {
+    background: var(--card-bg-dark, #1e293b);
+    border-color: rgba(255,255,255,0.1);
+}
+
 [data-theme='dark'] .number-item .count {
     color: #e5e7eb !important;
 }

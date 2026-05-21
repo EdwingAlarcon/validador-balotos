@@ -1,5 +1,7 @@
 // API Configuration
-const LOCAL_SERVER_URL = 'http://localhost:3000'; // Servidor de scraping local
+const LOCAL_SERVER_URL = window.location.protocol === 'file:'
+    ? 'http://localhost:3000'
+    : window.location.origin;
 
 // ========================================
 // TOAST NOTIFICATION SYSTEM
@@ -120,6 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add active class to clicked tab and corresponding content
             button.classList.add('active');
             document.getElementById(tabName).classList.add('active');
+
+            // Cargar estadísticas al entrar a la pestaña
+            if (tabName === 'estadisticas') {
+                loadStatisticsData();
+            }
 
             // Guardar tab activo en localStorage
             localStorage.setItem('validador-balotos:activeTab', tabName);
@@ -642,36 +649,16 @@ function generateRandomMiloto() {
 function generateRandomColorloto() {
     const ballsDisplay = document.getElementById('colorloto-results-display');
     const colors = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
-    const generatedPairs = [];
 
     if (ballsDisplay) {
         const balls = ballsDisplay.querySelectorAll('.result-ball');
-
-        // Generar 6 pares color-número únicos (no repetir combinación exacta)
-        while (generatedPairs.length < 6) {
-            const color = colors[Math.floor(Math.random() * colors.length)];
+        colors.forEach((color, index) => {
             const number = Math.floor(Math.random() * 7) + 1;
-            const pair = `${color}-${number}`;
-
-            // Solo agregar si la combinación exacta no existe
-            if (!generatedPairs.some(p => p.pair === pair)) {
-                generatedPairs.push({ color, number, pair });
-            }
-        }
-
-        // Ordenar los pares según el orden especificado de colores
-        const colorOrder = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
-        generatedPairs.sort((a, b) => colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color));
-
-        // Mostrar las bolas en orden
-        generatedPairs.forEach((item, index) => {
             if (balls[index]) {
-                // Remover clases de color previas
                 balls[index].className = 'result-ball';
-                // Aplicar nueva clase de color
-                balls[index].classList.add(`colorloto-${item.color}`);
-                balls[index].setAttribute('data-color', item.color);
-                balls[index].textContent = item.number.toString();
+                balls[index].classList.add(`colorloto-${color}`);
+                balls[index].setAttribute('data-color', color);
+                balls[index].textContent = number.toString();
                 balls[index].classList.add('ball-pop');
                 setTimeout(() => balls[index].classList.remove('ball-pop'), 500);
             }
@@ -860,7 +847,7 @@ function clearUserInputs(clearResults = false) {
     });
 
     // Limpiar Colorloto
-    document.querySelectorAll('.user-number, .user-color').forEach(input => {
+    document.querySelectorAll('.user-number').forEach(input => {
         input.value = '';
         input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
     });
@@ -1655,15 +1642,13 @@ function validateMiloto() {
 }
 
 function validateColorloto() {
-    const userColors = [];
+    const COLORS_ORDER = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+    const userColors = COLORS_ORDER;
     const userNumbers = [];
     const resultColors = [];
     const resultNumbers = [];
 
-    // Get user selections
-    document.querySelectorAll('.user-color').forEach((select, index) => {
-        userColors[index] = select.value;
-    });
+    // Leer números del usuario (uno por color fijo)
     document.querySelectorAll('.user-number').forEach((input, index) => {
         userNumbers[index] = parseInt(input.value);
     });
@@ -1682,26 +1667,17 @@ function validateColorloto() {
 
     // Validate all fields are filled
     if (
-        userColors.some(c => !c) ||
         userNumbers.some(n => isNaN(n)) ||
         resultColors.some(c => !c) ||
         resultNumbers.some(n => isNaN(n))
     ) {
-        Toast.warning('Por favor, completa todos los campos (6 colores con sus números)', 3000);
+        Toast.warning('Por favor, completa todos los campos (número del 1 al 7 para cada color)', 3000);
         return;
     }
 
     // Validate numbers are in range 1-7
     if (userNumbers.some(n => n < 1 || n > 7) || resultNumbers.some(n => n < 1 || n > 7)) {
         Toast.warning('Los números deben estar entre 1 y 7', 3000);
-        return;
-    }
-
-    // En Colorloto SÍ se pueden repetir colores, solo NO se puede repetir la combinación exacta color+número
-    // Check for duplicate color-number pairs (combinaciones exactas)
-    const userPairs = userColors.map((c, i) => `${c}-${userNumbers[i]}`);
-    if (new Set(userPairs).size !== 6) {
-        Toast.warning('No puedes tener la misma combinación de color y número repetida', 3000);
         return;
     }
 
@@ -1721,6 +1697,7 @@ function validateColorloto() {
         }
     }
 
+    const userPairs = userColors.map((c, i) => `${c}-${userNumbers[i]}`);
     const userPairsDisplay = userColors.map((c, i) => `${c} ${userNumbers[i]}`).join(', ');
     const resultPairsDisplay = resultColors.map((c, i) => `${c} ${resultNumbers[i]}`).join(', ');
 
@@ -1878,13 +1855,8 @@ function validateMilotoInputs() {
 // Validación para Colorloto
 function validateColorlotoInputs() {
     const numberInputs = document.querySelectorAll('.user-number');
-    const colorSelects = document.querySelectorAll('.user-color');
 
-    const colors = Array.from(colorSelects)
-        .map(s => s.value)
-        .filter(v => v);
-
-    numberInputs.forEach((input, index) => {
+    numberInputs.forEach((input) => {
         const value = parseInt(input.value);
         input.classList.remove('valid', 'invalid', 'duplicate');
 
@@ -1898,14 +1870,6 @@ function validateColorlotoInputs() {
         }
 
         input.classList.add('valid');
-    });
-
-    // Validar colores duplicados
-    colorSelects.forEach(select => {
-        select.classList.remove('duplicate');
-        if (select.value && colors.filter(c => c === select.value).length > 1) {
-            select.classList.add('duplicate');
-        }
     });
 }
 
@@ -2009,7 +1973,7 @@ document.querySelectorAll('.miloto-number').forEach(input => {
     input.addEventListener('blur', validateMilotoInputs);
 });
 
-document.querySelectorAll('.user-number, .user-color').forEach(input => {
+document.querySelectorAll('.user-number').forEach(input => {
     input.addEventListener('input', validateColorlotoInputs);
     input.addEventListener('change', validateColorlotoInputs);
     input.addEventListener('blur', validateColorlotoInputs);
@@ -2226,7 +2190,7 @@ function showShareButtons(game, result) {
         <button class="btn-share btn-share-twitter" onclick="shareOnTwitter(\`${encodedText}\`)">
             🐦 Twitter
         </button>
-        <button class="btn-share btn-share-copy" onclick="copyToClipboard(\`${shareText}\`)">
+        <button class="btn-share btn-share-copy" onclick="copyToClipboard(event, \`${shareText}\`)">
             📋 Copiar
         </button>
     `;
@@ -2252,7 +2216,7 @@ function shareOnTwitter(text) {
     Toast.success('Abriendo Twitter...', 2000);
 }
 
-function copyToClipboard(text) {
+function copyToClipboard(event, text) {
     // Decodificar el texto
     const decodedText = decodeURIComponent(text);
 
@@ -2296,6 +2260,64 @@ function fallbackCopyToClipboard(text) {
 
     document.body.removeChild(textArea);
 }
+// ========================================
+// ESTADÍSTICAS HISTÓRICAS
+// ========================================
+
+async function loadStatisticsData(event) {
+    if (event) event.target.disabled = true;
+    const container = document.getElementById('stats-container');
+    if (!container) return;
+    container.innerHTML = '<p class="helper-text">Cargando estadísticas...</p>';
+
+    try {
+        const res = await fetch(`${LOCAL_SERVER_URL}/api/statistics`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Error');
+
+        const s = data.statistics;
+        const topN = (freq, n) =>
+            Object.entries(freq)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, n);
+
+        function renderBars(entries, colorClass) {
+            if (!entries.length) return '<p class="helper-text">Sin datos</p>';
+            const max = entries[0][1] || 1;
+            return entries
+                .map(([num, count]) => {
+                    const pct = Math.round((count / max) * 100);
+                    return `<div class="stat-bar-row">
+                        <span class="stat-bar-label">${num}</span>
+                        <div class="stat-bar-track"><div class="stat-bar-fill ${colorClass}" style="width:${pct}%"></div></div>
+                        <span class="stat-bar-count">${count}</span>
+                    </div>`;
+                })
+                .join('');
+        }
+
+        container.innerHTML = `
+            <div class="stats-summary">
+                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Baloto || 0}</div><div class="stat-card-label">Sorteos Baloto</div></div>
+                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Miloto || 0}</div><div class="stat-card-label">Sorteos Miloto</div></div>
+                <div class="stat-card"><div class="stat-card-value">${s.totalSorteos?.Colorloto || 0}</div><div class="stat-card-label">Sorteos Colorloto</div></div>
+            </div>
+            <div class="stats-chart-section">
+                <h3>🎰 Baloto — Top 10 números</h3>
+                <div class="stats-bars">${renderBars(topN(s.frequency?.Baloto || {}, 10), 'baloto-bar')}</div>
+            </div>
+            <div class="stats-chart-section">
+                <h3>🎱 Miloto — Top 10 números</h3>
+                <div class="stats-bars">${renderBars(topN(s.frequency?.Miloto || {}, 10), 'miloto-bar')}</div>
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = `<p class="helper-text">Error al cargar estadísticas: ${e.message}</p>`;
+    } finally {
+        if (event) event.target.disabled = false;
+    }
+}
+
 // ========================================
 // FUNCIONES DE SORTEOS HISTÓRICOS
 // ========================================

@@ -4,6 +4,23 @@ const MIN_SORTEOS_FOR_STATISTICS = 20;
 const COLORS = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
 
 // ========================================
+// CACHÉ DE FRECUENCIAS — TTL 5 minutos
+// Evita re-escanear cientos de sorteos en cada generación
+// ========================================
+const _freqCache = new Map();
+const FREQ_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function getCachedFreq(key) {
+    const entry = _freqCache.get(key);
+    if (entry && Date.now() < entry.expiresAt) return entry.data;
+    return null;
+}
+
+function setCachedFreq(key, data) {
+    _freqCache.set(key, { data, expiresAt: Date.now() + FREQ_CACHE_TTL_MS });
+}
+
+// ========================================
 // WALKER'S ALIAS METHOD — O(n) setup, O(1) draw
 // Elimina el array inflado proporcional a frecuencias
 // ========================================
@@ -50,6 +67,10 @@ function computeConfidence(totalSorteos) {
 // Cada posición tiene su propia distribución.
 // ========================================
 function getPositionFrequency(game, maxNumber) {
+    const cacheKey = `pos:${game}:${maxNumber}`;
+    const cached = getCachedFreq(cacheKey);
+    if (cached) return cached;
+
     const results = db.getAllResults(game, 1000);
     const positions = Array.from({ length: 5 }, () => {
         const freq = {};
@@ -65,6 +86,7 @@ function getPositionFrequency(game, maxNumber) {
                 if (pos < 5 && num >= 1 && num <= maxNumber) positions[pos][num]++;
             });
     });
+    setCachedFreq(cacheKey, positions);
     return positions;
 }
 
@@ -91,6 +113,10 @@ function getNumberFrequency(game, limit = 1000) {
 // FRECUENCIA SÚPER BALOTA
 // ========================================
 function getSuperBalotaFrequency(game = 'Baloto') {
+    const cacheKey = `sb:${game}`;
+    const cached = getCachedFreq(cacheKey);
+    if (cached) return cached;
+
     const results = db.getAllResults(game, 1000);
     const frequency = {};
     for (let i = 1; i <= 16; i++) frequency[i] = 0;
@@ -98,6 +124,7 @@ function getSuperBalotaFrequency(game = 'Baloto') {
         const sb = parseInt(result.superBalota);
         if (sb >= 1 && sb <= 16) frequency[sb]++;
     });
+    setCachedFreq(cacheKey, frequency);
     return frequency;
 }
 
@@ -106,6 +133,10 @@ function getSuperBalotaFrequency(game = 'Baloto') {
 // Cada color tiene su propia distribución de números (1–7).
 // ========================================
 function getColorlotoColorFrequency() {
+    const cacheKey = 'colorloto:colorfreq';
+    const cached = getCachedFreq(cacheKey);
+    if (cached) return cached;
+
     const results = db.getAllResults('Colorloto', 1000);
     const colorFreq = {};
     COLORS.forEach(c => {
@@ -125,6 +156,7 @@ function getColorlotoColorFrequency() {
             if (colorFreq[color] && num >= 1 && num <= 7) colorFreq[color][num]++;
         });
     });
+    setCachedFreq(cacheKey, colorFreq);
     return colorFreq;
 }
 

@@ -2,6 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const db = require('./services/database');
 const { getAcumuladosOficiales } = require('./services/acumuladosOficiales');
 const {
@@ -47,7 +50,20 @@ const PORT = process.env.PORT || 3000;
 // Inicializar base de datos al arrancar el servidor
 db.initDatabase();
 
+// ========================================
+// RATE LIMITING — endpoints de scraping
+// ========================================
+const scrapingLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutos
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'Demasiadas peticiones, intenta de nuevo más tarde.' },
+});
+
 // Middleware
+app.use(helmet({ contentSecurityPolicy: false })); // CSP desactivado: la app usa scripts inline
+app.use(morgan(IS_PRODUCTION ? 'combined' : 'dev'));
 app.use(cors({ origin: ALLOWED_ORIGIN }));
 app.use(express.json());
 
@@ -83,7 +99,7 @@ app.get('/health', (req, res) => {
 });
 
 // Endpoint para obtener resultados de Baloto mediante scraping
-app.get('/api/baloto', async (req, res) => {
+app.get('/api/baloto', scrapingLimiter, async (req, res) => {
     try {
         const SCRAPER_URL = 'https://www.resultadobaloto.com/';
         let htmlData = getCachedHtml(SCRAPER_URL);
@@ -206,13 +222,13 @@ app.get('/api/baloto', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener resultados de Baloto',
-            details: error.message,
+            ...(IS_PRODUCTION ? {} : { details: error.message }),
         });
     }
 });
 
 // Endpoint para obtener resultados de Baloto Revancha mediante scraping
-app.get('/api/baloto-revancha', async (req, res) => {
+app.get('/api/baloto-revancha', scrapingLimiter, async (req, res) => {
     try {
         const SCRAPER_URL = 'https://www.resultadobaloto.com/';
         let htmlData = getCachedHtml(SCRAPER_URL);
@@ -333,13 +349,13 @@ app.get('/api/baloto-revancha', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener resultados de Baloto Revancha',
-            details: error.message,
+            ...(IS_PRODUCTION ? {} : { details: error.message }),
         });
     }
 });
 
 // Endpoint para obtener resultados de Miloto mediante scraping
-app.get('/api/miloto', async (req, res) => {
+app.get('/api/miloto', scrapingLimiter, async (req, res) => {
     try {
         const SCRAPER_URL = 'https://www.resultadobaloto.com/miloto.php';
         let htmlData = getCachedHtml(SCRAPER_URL);
@@ -419,13 +435,13 @@ app.get('/api/miloto', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener resultados de Miloto',
-            details: error.message,
+            ...(IS_PRODUCTION ? {} : { details: error.message }),
         });
     }
 });
 
 // Endpoint para obtener resultados de Colorloto mediante scraping
-app.get('/api/colorloto', async (req, res) => {
+app.get('/api/colorloto', scrapingLimiter, async (req, res) => {
     try {
         const SCRAPER_URL = 'https://www.resultadobaloto.com/colorloto.php';
         let htmlData = getCachedHtml(SCRAPER_URL);
@@ -529,7 +545,7 @@ app.get('/api/colorloto', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener resultados de Colorloto',
-            details: error.message,
+            ...(IS_PRODUCTION ? {} : { details: error.message }),
         });
     }
 });
@@ -537,7 +553,7 @@ app.get('/api/colorloto', async (req, res) => {
 // ========================================
 // ENDPOINT COMBINADO BALOTO + REVANCHA (un solo HTTP fetch)
 // ========================================
-app.get('/api/baloto-combined', async (req, res) => {
+app.get('/api/baloto-combined', scrapingLimiter, async (req, res) => {
     try {
         const SCRAPER_URL = 'https://www.resultadobaloto.com/';
         let htmlData = getCachedHtml(SCRAPER_URL);
@@ -643,7 +659,7 @@ app.get('/api/baloto-combined', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener resultados de Baloto y Revancha',
-            details: error.message,
+            ...(IS_PRODUCTION ? {} : { details: error.message }),
         });
     }
 });
@@ -771,7 +787,7 @@ app.get('/api/statistics', (req, res) => {
 app.get('/api/history/:game', (req, res) => {
     try {
         const { game } = req.params;
-        const limit = parseInt(req.query.limit) || 50;
+        const limit = Math.min(parseInt(req.query.limit) || 50, 200);
 
         // Validar juego
         const validGames = ['Baloto', 'Baloto Revancha', 'Miloto', 'Colorloto'];
@@ -836,6 +852,18 @@ app.get('/api/history/:game/:sorteoId', (req, res) => {
 app.post('/api/validate-historical', express.json(), (req, res) => {
     try {
         const { game, sorteoId, userNumbers, superBalota, colorNumberPairs } = req.body;
+
+        // Validar parámetros de entrada
+        const validGames = ['Baloto', 'Baloto Revancha', 'Miloto', 'Colorloto'];
+        if (!game || !validGames.includes(game)) {
+            return res.status(400).json({ success: false, error: 'Juego no válido.' });
+        }
+        if (sorteoId === undefined || isNaN(parseInt(sorteoId))) {
+            return res.status(400).json({ success: false, error: 'sorteoId inválido.' });
+        }
+        if (game !== 'Colorloto' && (!Array.isArray(userNumbers) || userNumbers.length < 1)) {
+            return res.status(400).json({ success: false, error: 'userNumbers debe ser un array.' });
+        }
 
         // Obtener resultado histórico
         const result = db.getResultByGameAndSorteo(game, sorteoId);
