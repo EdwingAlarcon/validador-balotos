@@ -12,37 +12,87 @@ const {
     MIN_SORTEOS_FOR_STATISTICS,
 } = require('./services/intelligentGenerator');
 
+// ========================================
+// CONFIGURACIÓN DE ENTORNO
+// ========================================
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || (IS_PRODUCTION ? false : '*');
+
+// ========================================
+// CACHÉ TTL EN MEMORIA PARA SCRAPING
+// ========================================
+const _scraperCache = new Map();
+const SCRAPER_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+function getCachedHtml(url) {
+    const entry = _scraperCache.get(url);
+    if (entry && Date.now() < entry.expiresAt) return entry.html;
+    _scraperCache.delete(url);
+    return null;
+}
+
+function setCachedHtml(url, html) {
+    _scraperCache.set(url, { html, expiresAt: Date.now() + SCRAPER_CACHE_TTL_MS });
+}
+
+// Constantes compartidas para scraping
+const SCRAPER_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+};
+const AXIOS_TIMEOUT_MS = 15000;
+
 const app = express();
-const PORT = process.env.PORT || 3000; // Usar puerto del entorno o 3000 por defecto
+const PORT = process.env.PORT || 3000;
 
 // Inicializar base de datos al arrancar el servidor
 db.initDatabase();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGIN }));
 app.use(express.json());
 
-// Desactivar caché para archivos estáticos en desarrollo
+// Archivos estáticos: sin caché en dev, caché de 1h en producción
 app.use(
     express.static('public', {
-        etag: false,
-        maxAge: 0,
-        setHeaders: res => {
-            res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        },
+        etag: IS_PRODUCTION,
+        maxAge: IS_PRODUCTION ? '1h' : 0,
+        setHeaders: IS_PRODUCTION
+            ? undefined
+            : res => {
+                  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+              },
     })
 );
+
+// ========================================
+// HEALTH CHECK
+// ========================================
+app.get('/health', (req, res) => {
+    try {
+        const totalRecords = db.getTotalResults();
+        res.json({
+            status: 'ok',
+            db: 'connected',
+            totalRecords,
+            uptime: Math.floor(process.uptime()),
+            environment: IS_PRODUCTION ? 'production' : 'development',
+        });
+    } catch (err) {
+        res.status(503).json({ status: 'error', db: 'disconnected', error: err.message });
+    }
+});
 
 // Endpoint para obtener resultados de Baloto mediante scraping
 app.get('/api/baloto', async (req, res) => {
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-        });
-
-        const $ = cheerio.load(response.data);
+        const SCRAPER_URL = 'https://www.resultadobaloto.com/';
+        let htmlData = getCachedHtml(SCRAPER_URL);
+        if (!htmlData) {
+            const response = await axios.get(SCRAPER_URL, { headers: SCRAPER_HEADERS, timeout: AXIOS_TIMEOUT_MS });
+            htmlData = response.data;
+            setCachedHtml(SCRAPER_URL, htmlData);
+        }
+        const $ = cheerio.load(htmlData);
 
         // Buscar los 5 números principales del Baloto (1-43)
         const numbers = [];
@@ -164,13 +214,14 @@ app.get('/api/baloto', async (req, res) => {
 // Endpoint para obtener resultados de Baloto Revancha mediante scraping
 app.get('/api/baloto-revancha', async (req, res) => {
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-        });
-
-        const $ = cheerio.load(response.data);
+        const SCRAPER_URL = 'https://www.resultadobaloto.com/';
+        let htmlData = getCachedHtml(SCRAPER_URL);
+        if (!htmlData) {
+            const response = await axios.get(SCRAPER_URL, { headers: SCRAPER_HEADERS, timeout: AXIOS_TIMEOUT_MS });
+            htmlData = response.data;
+            setCachedHtml(SCRAPER_URL, htmlData);
+        }
+        const $ = cheerio.load(htmlData);
 
         // Buscar los números del Baloto Revancha
         const numbers = [];
@@ -290,13 +341,14 @@ app.get('/api/baloto-revancha', async (req, res) => {
 // Endpoint para obtener resultados de Miloto mediante scraping
 app.get('/api/miloto', async (req, res) => {
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/miloto.php', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-        });
-
-        const $ = cheerio.load(response.data);
+        const SCRAPER_URL = 'https://www.resultadobaloto.com/miloto.php';
+        let htmlData = getCachedHtml(SCRAPER_URL);
+        if (!htmlData) {
+            const response = await axios.get(SCRAPER_URL, { headers: SCRAPER_HEADERS, timeout: AXIOS_TIMEOUT_MS });
+            htmlData = response.data;
+            setCachedHtml(SCRAPER_URL, htmlData);
+        }
+        const $ = cheerio.load(htmlData);
 
         // Buscar los 5 números del Miloto (1-39)
         const numbers = [];
@@ -375,13 +427,14 @@ app.get('/api/miloto', async (req, res) => {
 // Endpoint para obtener resultados de Colorloto mediante scraping
 app.get('/api/colorloto', async (req, res) => {
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/colorloto.php', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-        });
-
-        const $ = cheerio.load(response.data);
+        const SCRAPER_URL = 'https://www.resultadobaloto.com/colorloto.php';
+        let htmlData = getCachedHtml(SCRAPER_URL);
+        if (!htmlData) {
+            const response = await axios.get(SCRAPER_URL, { headers: SCRAPER_HEADERS, timeout: AXIOS_TIMEOUT_MS });
+            htmlData = response.data;
+            setCachedHtml(SCRAPER_URL, htmlData);
+        }
+        const $ = cheerio.load(htmlData);
 
         // Buscar 6 combinaciones de color-número
         const colorNumberPairs = [];
@@ -481,24 +534,117 @@ app.get('/api/colorloto', async (req, res) => {
     }
 });
 
-// Endpoint de debug
-app.get('/api/debug/:game', async (req, res) => {
-    const { game } = req.params;
-    const urls = {
-        miloto: 'https://www.resultadobaloto.com/miloto.php',
-        colorloto: 'https://www.resultadobaloto.com/colorloto.php',
-    };
-
+// ========================================
+// ENDPOINT COMBINADO BALOTO + REVANCHA (un solo HTTP fetch)
+// ========================================
+app.get('/api/baloto-combined', async (req, res) => {
     try {
-        const response = await axios.get(urls[game], {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
+        const SCRAPER_URL = 'https://www.resultadobaloto.com/';
+        let htmlData = getCachedHtml(SCRAPER_URL);
+        if (!htmlData) {
+            const response = await axios.get(SCRAPER_URL, { headers: SCRAPER_HEADERS, timeout: AXIOS_TIMEOUT_MS });
+            htmlData = response.data;
+            setCachedHtml(SCRAPER_URL, htmlData);
+        }
+        const $ = cheerio.load(htmlData);
+
+        const firstPanel = $('#listaResultados .panel').eq(0);
+
+        const allNumbers = [];
+        firstPanel.find('.label-baloto').each((i, elem) => {
+            const num = parseInt($(elem).text().trim());
+            if (!isNaN(num) && num >= 1 && num <= 43) allNumbers.push(num);
         });
 
-        res.send(response.data);
+        const allSuperBalotas = [];
+        firstPanel.find('.label-comple').each((i, elem) => {
+            const num = parseInt($(elem).text().trim());
+            if (!isNaN(num) && num >= 1 && num <= 16) allSuperBalotas.push(num);
+        });
+
+        if (allNumbers.length < 10 || allSuperBalotas.length < 2) {
+            return res.status(404).json({
+                success: false,
+                error: 'No se pudieron extraer los datos de Baloto y Revancha',
+                numbersFound: allNumbers.length,
+                superBalotasFound: allSuperBalotas.length,
+            });
+        }
+
+        const fecha = firstPanel.find('time').text().trim() || null;
+        const heading = firstPanel.find('.panel-heading h2').text();
+        const sorteoMatch = heading.match(/Baloto\s*(\d+)/i);
+        const sorteo = sorteoMatch ? sorteoMatch[1] : null;
+
+        // Acumulados (fallback)
+        let acumulado = null;
+        let acumuladoRevancha = null;
+        $('p').each((i, el) => {
+            const text = $(el).text();
+            const match = text.match(/\$\s*([\d,\.]+)\s*millones?\s+y\s+\$\s*([\d,\.]+)\s*millones?/i);
+            if (match) {
+                acumulado = parseFloat(match[1].replace(/,/g, '')) * 1000000;
+                acumuladoRevancha = parseFloat(match[2].replace(/,/g, '')) * 1000000;
+            }
+        });
+
+        // Acumulados oficiales (con cach\u00e9 propia)
+        try {
+            const acumuladosOficiales = await getAcumuladosOficiales();
+            if (acumuladosOficiales) {
+                if (acumuladosOficiales.baloto) acumulado = acumuladosOficiales.baloto * 1000000;
+                if (acumuladosOficiales.revancha) acumuladoRevancha = acumuladosOficiales.revancha * 1000000;
+            }
+        } catch (err) {
+            console.log('No se pudo obtener acumulados oficiales, usando fallback');
+        }
+
+        // Tablas de premios
+        const balotroPremios = [];
+        $('table.table-bordered').eq(0).find('tr').each((i, row) => {
+            const cells = [];
+            $(row).find('td').each((j, cell) => cells.push($(cell).text().trim()));
+            if (cells.length >= 4 && cells[0].includes('Aciertos')) {
+                balotroPremios.push({ categoria: cells[0], premio: parseInt(cells[3].replace(/[\$\.,]/g, '')) || 0 });
+            }
+        });
+
+        const revanchaPremios = [];
+        $('table.table-bordered').eq(1).find('tr').each((i, row) => {
+            const cells = [];
+            $(row).find('td').each((j, cell) => cells.push($(cell).text().trim()));
+            if (cells.length >= 4 && cells[0].includes('Aciertos')) {
+                revanchaPremios.push({ categoria: cells[0], premio: parseInt(cells[3].replace(/[\$\.,]/g, '')) || 0 });
+            }
+        });
+
+        res.json({
+            success: true,
+            source: 'resultadobaloto.com',
+            baloto: {
+                numbers: allNumbers.slice(0, 5),
+                superBalota: allSuperBalotas[0],
+                fecha,
+                sorteo,
+                acumulado,
+                premios: balotroPremios,
+            },
+            revancha: {
+                numbers: allNumbers.slice(5, 10),
+                superBalota: allSuperBalotas[1],
+                fecha,
+                sorteo,
+                acumulado: acumuladoRevancha,
+                premios: revanchaPremios,
+            },
+        });
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error('Error al hacer scraping combinado Baloto/Revancha:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener resultados de Baloto y Revancha',
+            details: error.message,
+        });
     }
 });
 
@@ -658,15 +804,7 @@ app.get('/api/history/:game/:sorteoId', (req, res) => {
     try {
         const { game, sorteoId } = req.params;
 
-        const result = db.db
-            .prepare(
-                `
-            SELECT * FROM historical_results
-            WHERE game = ? AND sorteo = ?
-            LIMIT 1
-        `
-            )
-            .get(game, parseInt(sorteoId));
+        const result = db.getResultByGameAndSorteo(game, sorteoId);
 
         if (!result) {
             return res.status(404).json({
@@ -697,15 +835,7 @@ app.post('/api/validate-historical', express.json(), (req, res) => {
         const { game, sorteoId, userNumbers, superBalota, colorNumberPairs } = req.body;
 
         // Obtener resultado histórico
-        const result = db.db
-            .prepare(
-                `
-            SELECT * FROM historical_results
-            WHERE game = ? AND sorteo = ?
-            LIMIT 1
-        `
-            )
-            .get(game, parseInt(sorteoId));
+        const result = db.getResultByGameAndSorteo(game, sorteoId);
 
         if (!result) {
             return res.status(404).json({
@@ -772,14 +902,17 @@ app.post('/api/validate-historical', express.json(), (req, res) => {
 });
 
 // Servidor
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║   🎰 Servidor de Validador de Tiquetes iniciado          ║
 ║                                                            ║
 ║   📍 URL: http://localhost:${PORT}                         ║
+║   🌍 Entorno: ${IS_PRODUCTION ? 'producción         ' : 'desarrollo          '}                   ║
 ║                                                            ║
 ║   📡 Endpoints disponibles:                               ║
+║   • GET  /health               - Estado del servidor      ║
+║   • GET  /api/baloto-combined  - Baloto + Revancha (1 req)║
 ║   • GET  /api/baloto           - Resultados de Baloto     ║
 ║   • GET  /api/baloto-revancha  - Resultados Revancha      ║
 ║   • GET  /api/miloto           - Resultados de Miloto     ║
@@ -796,3 +929,23 @@ app.listen(PORT, '0.0.0.0', () => {
 ╚════════════════════════════════════════════════════════════╝
     `);
 });
+
+// Apagado limpio: cierra la BD antes de terminar (evita corrupción SQLite WAL)
+function gracefulShutdown(signal) {
+    console.log(`\nRecibida señal ${signal}, cerrando servidor...`);
+    server.close(() => {
+        console.log('Servidor HTTP cerrado.');
+        try {
+            db.closeDatabase();
+            console.log('Base de datos cerrada correctamente.');
+        } catch (err) {
+            console.error('Error al cerrar la base de datos:', err.message);
+        }
+        process.exit(0);
+    });
+    // Forzar salida si no cierra en 10 segundos
+    setTimeout(() => process.exit(1), 10000).unref();
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

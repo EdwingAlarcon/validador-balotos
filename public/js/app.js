@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(tabName).classList.add('active');
 
             // Guardar tab activo en localStorage
-            localStorage.setItem('activeTab', tabName);
+            localStorage.setItem('validador-balotos:activeTab', tabName);
 
             // Auto-enfocar el primer input de la pestaña activa
             setTimeout(() => {
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Restaurar tab activo al cargar
-    const savedTab = localStorage.getItem('activeTab');
+    const savedTab = localStorage.getItem('validador-balotos:activeTab');
     if (savedTab) {
         const tabButton = document.querySelector(`[data-tab="${savedTab}"]`);
         if (tabButton) {
@@ -245,33 +245,78 @@ let colorlotoData = {
 };
 
 // ========================================
+// HELPER FUNCTIONS FOR RESULT DISPLAY
+// ========================================
+
+function fillResultBalls(displayId, numbers, superBalota = null, startDelay = 0) {
+    const ballsDisplay = document.getElementById(displayId);
+    if (!ballsDisplay) return;
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
+    numbers.forEach((num, index) => {
+        if (!balls[index]) return;
+        balls[index].textContent = num.toString().padStart(2, '0');
+        balls[index].classList.remove('empty');
+        setTimeout(() => {
+            balls[index].classList.add('loaded');
+            setTimeout(() => balls[index].classList.remove('loaded'), 500);
+        }, startDelay + index * 100);
+    });
+    if (superBalota !== null && balls[numbers.length]) {
+        const ball = balls[numbers.length];
+        ball.textContent = superBalota.toString().padStart(2, '0');
+        ball.classList.remove('empty');
+        setTimeout(() => {
+            ball.classList.add('loaded');
+            setTimeout(() => ball.classList.remove('loaded'), 500);
+        }, startDelay + numbers.length * 100);
+    }
+}
+
+function fillColorlotoBalls(displayId, pairs, startDelay = 0) {
+    const ballsDisplay = document.getElementById(displayId);
+    if (!ballsDisplay) return;
+    const balls = ballsDisplay.querySelectorAll('.result-ball');
+    pairs.forEach((pair, index) => {
+        if (!balls[index]) return;
+        balls[index].className = 'result-ball';
+        balls[index].classList.add(`colorloto-${pair.color}`);
+        balls[index].setAttribute('data-color', pair.color);
+        balls[index].textContent = pair.number.toString();
+        balls[index].classList.remove('empty');
+        setTimeout(() => {
+            balls[index].classList.add('loaded');
+            setTimeout(() => balls[index].classList.remove('loaded'), 500);
+        }, startDelay + index * 100);
+    });
+}
+
+function updateSorteoInfo(elementId, result) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    let html = '';
+    if (result.sorteo) html += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
+    if (result.fecha) html += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
+    if (result.acumulado) {
+        html += `<span class="sorteo-acumulado">💰 Acumulado: $${Number(result.acumulado).toLocaleString('es-CO')}</span>`;
+    }
+    el.innerHTML = html;
+    el.style.display = html ? 'flex' : 'none';
+}
+
+// ========================================
 // LOAD LATEST RESULTS FUNCTIONS
 // ========================================
-async function loadLatestBalotoResults() {
-    console.log('Intentando cargar resultados de Baloto...');
-    console.log('URL del servidor:', LOCAL_SERVER_URL);
-
-    const button = event?.target;
+async function loadLatestBalotoResults(event) {
+    const button = event?.currentTarget ?? event?.target;
     if (button) setButtonLoading(button, true);
 
     try {
-        const url = `${LOCAL_SERVER_URL}/api/baloto`;
-        console.log('Consultando:', url);
-
         Toast.info('Cargando resultados de Baloto...', 2000);
-
-        const response = await fetch(url);
-        console.log('Respuesta recibida, status:', response.status);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/baloto`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-        console.log('Datos parseados:', result);
 
         if (!result.success) {
-            console.error('Error en la respuesta:', result.error);
             Toast.error(
                 `${result.error}. Números encontrados: ${result.numbersFound || 0}, Súper Balota: ${
                     result.superBalotaFound || 0
@@ -281,64 +326,15 @@ async function loadLatestBalotoResults() {
             return;
         }
 
-        // Llenar las bolas visuales con los resultados
-        const ballsDisplay = document.getElementById('baloto-results-display');
-        if (ballsDisplay) {
-            const balls = ballsDisplay.querySelectorAll('.result-ball');
+        fillResultBalls('baloto-results-display', result.numbers, result.superBalota);
+        updateSorteoInfo('sorteo-info', result);
+        if (result.acumulado) balotoData.acumulado = result.acumulado;
+        if (result.premios?.length) balotoData.premios = result.premios;
+        if (result.acumuladoRevancha) balotoData.acumuladoRevancha = result.acumuladoRevancha;
 
-            // Llenar los 5 números principales
-            result.numbers.forEach((num, index) => {
-                if (balls[index]) {
-                    balls[index].textContent = num.toString().padStart(2, '0');
-                    balls[index].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[index].classList.add('loaded');
-                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                    }, index * 100);
-                }
-            });
-
-            // Llenar la Súper Balota (bola roja)
-            if (balls[5]) {
-                balls[5].textContent = result.superBalota.toString().padStart(2, '0');
-                balls[5].classList.remove('empty');
-                setTimeout(() => {
-                    balls[5].classList.add('loaded');
-                    setTimeout(() => balls[5].classList.remove('loaded'), 500);
-                }, 500);
-            }
-        }
-
-        // Mostrar información del sorteo
-        const sorteoInfoElement = document.getElementById('sorteo-info');
-        if (sorteoInfoElement) {
-            let infoHTML = '';
-            if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
-            }
-            if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
-            }
-            if (result.acumulado) {
-                balotoData.acumulado = result.acumulado;
-                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
-                    'es-CO'
-                )}</span>`;
-            }
-            sorteoInfoElement.innerHTML = infoHTML;
-            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-        }
-
-        // Guardar premios reales
-        if (result.premios && result.premios.length > 0) {
-            balotoData.premios = result.premios;
-            balotoData.acumuladoRevancha = result.acumuladoRevancha;
-        }
-
-        let toastText = `✅ Resultados cargados desde ${result.source}`;
-        Toast.success(toastText, 4000);
+        Toast.success(`✅ Resultados cargados desde ${result.source}`, 4000);
     } catch (error) {
-        console.error('Error completo:', error);
+        console.error('Error al cargar Baloto:', error);
         Toast.error(
             'Error al cargar resultados. Asegúrate de tener el servidor corriendo (npm start) y abrir en http://localhost:3000',
             6000
@@ -348,21 +344,14 @@ async function loadLatestBalotoResults() {
     }
 }
 
-async function loadLatestBalotoRevanchaResults() {
-    console.log('Intentando cargar resultados de Baloto Revancha...');
-
-    const button = event?.target;
+async function loadLatestBalotoRevanchaResults(event) {
+    const button = event?.currentTarget ?? event?.target;
     if (button) setButtonLoading(button, true);
 
     try {
-        const url = `${LOCAL_SERVER_URL}/api/baloto-revancha`;
         Toast.info('Cargando resultados de Baloto Revancha...', 2000);
-
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/baloto-revancha`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
 
         if (!result.success) {
@@ -370,63 +359,14 @@ async function loadLatestBalotoRevanchaResults() {
             return;
         }
 
-        // Llenar las bolas visuales con los resultados
-        const ballsDisplay = document.getElementById('baloto-revancha-results-display');
-        if (ballsDisplay) {
-            const balls = ballsDisplay.querySelectorAll('.result-ball');
-
-            // Llenar los 5 números principales
-            result.numbers.forEach((num, index) => {
-                if (balls[index]) {
-                    balls[index].textContent = num.toString().padStart(2, '0');
-                    balls[index].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[index].classList.add('loaded');
-                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                    }, index * 100);
-                }
-            });
-
-            // Llenar la Súper Balota (bola roja)
-            if (balls[5]) {
-                balls[5].textContent = result.superBalota.toString().padStart(2, '0');
-                balls[5].classList.remove('empty');
-                setTimeout(() => {
-                    balls[5].classList.add('loaded');
-                    setTimeout(() => balls[5].classList.remove('loaded'), 500);
-                }, 500);
-            }
-        }
-
-        // Mostrar información del sorteo
-        const sorteoInfoElement = document.getElementById('sorteo-revancha-info');
-        if (sorteoInfoElement) {
-            let infoHTML = '';
-            if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
-            }
-            if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
-            }
-            if (result.acumulado) {
-                balotoData.acumuladoRevancha = result.acumulado;
-                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
-                    'es-CO'
-                )}</span>`;
-            }
-            sorteoInfoElement.innerHTML = infoHTML;
-            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-        }
-
-        // Guardar premios reales
-        if (result.premios && result.premios.length > 0) {
-            // Los premios de revancha se guardan en balotoData
-            balotoData.premiosRevancha = result.premios;
-        }
+        fillResultBalls('baloto-revancha-results-display', result.numbers, result.superBalota);
+        updateSorteoInfo('sorteo-revancha-info', result);
+        if (result.acumulado) balotoData.acumuladoRevancha = result.acumulado;
+        if (result.premios?.length) balotoData.premiosRevancha = result.premios;
 
         Toast.success(`✅ Resultados de Revancha cargados desde ${result.source}`, 4000);
     } catch (error) {
-        console.error('Error completo:', error);
+        console.error('Error al cargar Baloto Revancha:', error);
         Toast.error('Error al cargar resultados de Baloto Revancha', 6000);
     } finally {
         if (button) setButtonLoading(button, false);
@@ -436,156 +376,34 @@ async function loadLatestBalotoRevanchaResults() {
 // ========================================
 // CARGAR RESULTADOS INTEGRADOS (BALOTO + REVANCHA)
 // ========================================
-async function loadLatestBalotoIntegratedResults() {
-    console.log('Cargando resultados de Baloto y Revancha simultáneamente...');
-
-    const button = event?.target;
+async function loadLatestBalotoIntegratedResults(event) {
+    const button = event?.currentTarget ?? event?.target;
     if (button) setButtonLoading(button, true);
 
     try {
         Toast.info('Cargando resultados de Baloto y Revancha...', 2000);
 
-        // Cargar ambos endpoints en paralelo
-        const [balotoResponse, revanchaResponse] = await Promise.all([
-            fetch(`${LOCAL_SERVER_URL}/api/baloto`),
-            fetch(`${LOCAL_SERVER_URL}/api/baloto-revancha`),
-        ]);
+        // Un solo request al nuevo endpoint combinado
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/baloto-combined`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
 
-        if (!balotoResponse.ok || !revanchaResponse.ok) {
-            throw new Error('Error al cargar uno o ambos resultados');
+        if (!result.success) {
+            Toast.error(result.error, 5000);
+            return;
         }
 
-        const balotoResult = await balotoResponse.json();
-        const revanchaResult = await revanchaResponse.json();
+        fillResultBalls('baloto-results-display', result.baloto.numbers, result.baloto.superBalota);
+        updateSorteoInfo('sorteo-info', result.baloto);
+        if (result.baloto.acumulado) balotoData.acumulado = result.baloto.acumulado;
+        if (result.baloto.premios?.length) balotoData.premios = result.baloto.premios;
 
-        let errorMessages = [];
+        fillResultBalls('baloto-revancha-results-display', result.revancha.numbers, result.revancha.superBalota, 600);
+        updateSorteoInfo('sorteo-revancha-info', result.revancha);
+        if (result.revancha.acumulado) balotoData.acumuladoRevancha = result.revancha.acumulado;
+        if (result.revancha.premios?.length) balotoData.premiosRevancha = result.revancha.premios;
 
-        // Procesar resultados de Baloto
-        if (balotoResult.success) {
-            const ballsDisplay = document.getElementById('baloto-results-display');
-            if (ballsDisplay) {
-                const balls = ballsDisplay.querySelectorAll('.result-ball');
-
-                // Llenar los 5 números principales
-                balotoResult.numbers.forEach((num, index) => {
-                    if (balls[index]) {
-                        balls[index].textContent = num.toString().padStart(2, '0');
-                        balls[index].classList.remove('empty');
-                        setTimeout(() => {
-                            balls[index].classList.add('loaded');
-                            setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                        }, index * 100);
-                    }
-                });
-
-                // Llenar la Súper Balota
-                if (balls[5]) {
-                    balls[5].textContent = balotoResult.superBalota.toString().padStart(2, '0');
-                    balls[5].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[5].classList.add('loaded');
-                        setTimeout(() => balls[5].classList.remove('loaded'), 500);
-                    }, 500);
-                }
-            }
-
-            // Mostrar información del sorteo Baloto
-            const sorteoInfoElement = document.getElementById('sorteo-info');
-            if (sorteoInfoElement) {
-                let infoHTML = '';
-                if (balotoResult.sorteo) {
-                    infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${balotoResult.sorteo}</span>`;
-                }
-                if (balotoResult.fecha) {
-                    infoHTML += `<span class="sorteo-fecha">📅 ${balotoResult.fecha}</span>`;
-                }
-                if (balotoResult.acumulado) {
-                    balotoData.acumulado = balotoResult.acumulado;
-                    infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${balotoResult.acumulado.toLocaleString(
-                        'es-CO'
-                    )}</span>`;
-                }
-                sorteoInfoElement.innerHTML = infoHTML;
-                sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-            }
-
-            // Guardar premios reales de Baloto
-            if (balotoResult.premios && balotoResult.premios.length > 0) {
-                balotoData.premios = balotoResult.premios;
-            }
-        } else {
-            errorMessages.push(`Baloto: ${balotoResult.error}`);
-        }
-
-        // Procesar resultados de Revancha
-        if (revanchaResult.success) {
-            const ballsDisplay = document.getElementById('baloto-revancha-results-display');
-            if (ballsDisplay) {
-                const balls = ballsDisplay.querySelectorAll('.result-ball');
-
-                // Llenar los 5 números principales
-                revanchaResult.numbers.forEach((num, index) => {
-                    if (balls[index]) {
-                        balls[index].textContent = num.toString().padStart(2, '0');
-                        balls[index].classList.remove('empty');
-                        setTimeout(
-                            () => {
-                                balls[index].classList.add('loaded');
-                                setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                            },
-                            index * 100 + 600
-                        ); // Offset para que sea después de Baloto
-                    }
-                });
-
-                // Llenar la Súper Balota
-                if (balls[5]) {
-                    balls[5].textContent = revanchaResult.superBalota.toString().padStart(2, '0');
-                    balls[5].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[5].classList.add('loaded');
-                        setTimeout(() => balls[5].classList.remove('loaded'), 500);
-                    }, 1100);
-                }
-            }
-
-            // Mostrar información del sorteo Revancha
-            const sorteoInfoElement = document.getElementById('sorteo-revancha-info');
-            if (sorteoInfoElement) {
-                let infoHTML = '';
-                if (revanchaResult.sorteo) {
-                    infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${revanchaResult.sorteo}</span>`;
-                }
-                if (revanchaResult.fecha) {
-                    infoHTML += `<span class="sorteo-fecha">📅 ${revanchaResult.fecha}</span>`;
-                }
-                if (revanchaResult.acumulado) {
-                    balotoData.acumuladoRevancha = revanchaResult.acumulado;
-                    infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${revanchaResult.acumulado.toLocaleString(
-                        'es-CO'
-                    )}</span>`;
-                }
-                sorteoInfoElement.innerHTML = infoHTML;
-                sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-            }
-
-            // Guardar premios reales de Revancha
-            if (revanchaResult.premios && revanchaResult.premios.length > 0) {
-                balotoData.premiosRevancha = revanchaResult.premios;
-            }
-        } else {
-            errorMessages.push(`Revancha: ${revanchaResult.error}`);
-        }
-
-        // Mostrar resultado final
-        if (errorMessages.length > 0) {
-            Toast.warning(`⚠️ Algunos resultados no se cargaron correctamente: ${errorMessages.join(' | ')}`, 6000);
-        } else {
-            Toast.success(
-                `✅ Resultados cargados exitosamente (Baloto: ${balotoResult.source} | Revancha: ${revanchaResult.source})`,
-                5000
-            );
-        }
+        Toast.success(`✅ Resultados cargados desde ${result.source}`, 5000);
     } catch (error) {
         console.error('Error al cargar resultados integrados:', error);
         Toast.error(
@@ -597,24 +415,15 @@ async function loadLatestBalotoIntegratedResults() {
     }
 }
 
-async function loadLatestMilotoResults() {
-    console.log('Intentando cargar resultados de Miloto...');
-    console.log('URL del servidor:', LOCAL_SERVER_URL);
-
-    const button = event?.target;
+async function loadLatestMilotoResults(event) {
+    const button = event?.currentTarget ?? event?.target;
     if (button) setButtonLoading(button, true);
 
     try {
-        const url = `${LOCAL_SERVER_URL}/api/miloto`;
-        console.log('Consultando:', url);
-
         Toast.info('Cargando resultados de Miloto...', 2000);
-
-        const response = await fetch(url);
-        console.log('Respuesta recibida:', response.status);
-
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/miloto`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-        console.log('Datos:', result);
 
         if (!result.success) {
             Toast.error(`${result.error}. Por favor, ingresa los números manualmente desde la página oficial.`, 5000);
@@ -626,47 +435,13 @@ async function loadLatestMilotoResults() {
             return;
         }
 
-        // Llenar las bolas visuales con los resultados
-        const ballsDisplay = document.getElementById('miloto-results-display');
-        if (ballsDisplay) {
-            const balls = ballsDisplay.querySelectorAll('.result-ball');
-            result.numbers.forEach((num, index) => {
-                if (balls[index]) {
-                    balls[index].textContent = num.toString().padStart(2, '0');
-                    balls[index].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[index].classList.add('loaded');
-                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                    }, index * 100);
-                }
-            });
-        }
+        fillResultBalls('miloto-results-display', result.numbers);
+        updateSorteoInfo('sorteo-miloto-info', result);
+        if (result.acumulado) milotoData.acumulado = result.acumulado;
 
-        // Mostrar información del sorteo en la UI
-        const sorteoInfoElement = document.getElementById('sorteo-miloto-info');
-        if (sorteoInfoElement) {
-            let infoHTML = '';
-            if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
-            }
-            if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
-            }
-            if (result.acumulado) {
-                milotoData.acumulado = result.acumulado;
-                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
-                    'es-CO'
-                )}</span>`;
-            }
-            sorteoInfoElement.innerHTML = infoHTML;
-            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-        }
-
-        // Mostrar información del sorteo
         let message = `Resultados cargados: ${result.numbers.join(', ')}`;
         if (result.fecha) message += ` - ${result.fecha}`;
         if (result.sorteo) message += ` - Sorteo #${result.sorteo}`;
-
         Toast.success(message, 5000);
     } catch (error) {
         console.error('Error al cargar Miloto:', error);
@@ -679,24 +454,15 @@ async function loadLatestMilotoResults() {
     }
 }
 
-async function loadLatestColorlotoResults() {
-    console.log('Intentando cargar resultados de Colorloto...');
-    console.log('URL del servidor:', LOCAL_SERVER_URL);
-
-    const button = event?.target;
+async function loadLatestColorlotoResults(event) {
+    const button = event?.currentTarget ?? event?.target;
     if (button) setButtonLoading(button, true);
 
     try {
-        const url = `${LOCAL_SERVER_URL}/api/colorloto`;
-        console.log('Consultando:', url);
-
         Toast.info('Cargando resultados de Colorloto...', 2000);
-
-        const response = await fetch(url);
-        console.log('Respuesta recibida:', response.status);
-
+        const response = await fetch(`${LOCAL_SERVER_URL}/api/colorloto`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-        console.log('Datos:', result);
 
         if (!result.success) {
             Toast.error(
@@ -714,53 +480,18 @@ async function loadLatestColorlotoResults() {
             return;
         }
 
-        // Llenar las bolas visuales con los resultados
-        const ballsDisplay = document.getElementById('colorloto-results-display');
-        if (ballsDisplay) {
-            const balls = ballsDisplay.querySelectorAll('.result-ball');
-            result.colorNumberPairs.forEach((pair, index) => {
-                if (balls[index]) {
-                    // Remover clases de color previas
-                    balls[index].className = 'result-ball';
-                    // Aplicar nueva clase de color según el resultado
-                    balls[index].classList.add(`colorloto-${pair.color}`);
-                    balls[index].setAttribute('data-color', pair.color);
-                    balls[index].textContent = pair.number.toString();
-                    balls[index].classList.remove('empty');
-                    setTimeout(() => {
-                        balls[index].classList.add('loaded');
-                        setTimeout(() => balls[index].classList.remove('loaded'), 500);
-                    }, index * 100);
-                }
-            });
-        }
+        const colorOrder = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+        const sortedPairs = [...result.colorNumberPairs].sort(
+            (a, b) => colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color)
+        );
+        fillColorlotoBalls('colorloto-results-display', sortedPairs);
+        updateSorteoInfo('sorteo-colorloto-info', result);
+        if (result.acumulado) colorlotoData.acumulado = result.acumulado;
 
-        // Mostrar información del sorteo en la UI
-        const sorteoInfoElement = document.getElementById('sorteo-colorloto-info');
-        if (sorteoInfoElement) {
-            let infoHTML = '';
-            if (result.sorteo) {
-                infoHTML += `<span class="sorteo-numero">🎲 Sorteo #${result.sorteo}</span>`;
-            }
-            if (result.fecha) {
-                infoHTML += `<span class="sorteo-fecha">📅 ${result.fecha}</span>`;
-            }
-            if (result.acumulado) {
-                colorlotoData.acumulado = result.acumulado;
-                infoHTML += `<span class="sorteo-acumulado">💰 Acumulado: $${result.acumulado.toLocaleString(
-                    'es-CO'
-                )}</span>`;
-            }
-            sorteoInfoElement.innerHTML = infoHTML;
-            sorteoInfoElement.style.display = infoHTML ? 'flex' : 'none';
-        }
-
-        // Mostrar información del sorteo
-        const pairsDisplay = result.colorNumberPairs.map(p => `${p.color} ${p.number}`).join(', ');
+        const pairsDisplay = sortedPairs.map(p => `${p.color} ${p.number}`).join(', ');
         let message = `Resultados cargados: ${pairsDisplay}`;
         if (result.fecha) message += ` - ${result.fecha}`;
         if (result.sorteo) message += ` - Sorteo #${result.sorteo}`;
-
         Toast.success(message, 5000);
     } catch (error) {
         console.error('Error al cargar Colorloto:', error);
@@ -1415,40 +1146,24 @@ function validateBalotoRevancha() {
     let prize = balotoRevanchaPrizes[prizeKey];
     let prizeAmount = 0;
 
-    console.log('🔍 DEBUG Baloto Revancha:');
-    console.log('Matches:', matches);
-    console.log('Super Match:', superMatch);
-    console.log('Prize Key:', prizeKey);
-    console.log('Prize:', prize);
-
     // Verificar reglas específicas de Baloto Revancha
     if (prize) {
         if (prize.isRefund) {
             // Reembolsos: 0+1 o 1+1 = $2,100
             prizeAmount = prize.prize;
-            console.log('✅ Es reembolso, prizeAmount:', prizeAmount);
         } else if (prize.isJackpot) {
             // Premio mayor = acumulado del servidor o valor inicial $1.000 millones
             prizeAmount = balotoData.acumuladoRevancha || prize.prize;
-            console.log('✅ Es jackpot, prizeAmount:', prizeAmount);
         } else if (prize.isVariable && balotoData.premiosRevancha && balotoData.premiosRevancha.length > 0) {
             // Premios variables: buscar desde el servidor
             const realPrize = balotoData.premiosRevancha.find(p => p.categoria.includes(`${matches} `));
             if (realPrize && realPrize.premio > 0) {
                 prizeAmount = realPrize.premio;
             }
-            console.log('✅ Es variable, prizeAmount:', prizeAmount);
         } else {
             prizeAmount = prize.prize;
-            console.log('✅ Premio fijo, prizeAmount:', prizeAmount);
         }
     }
-
-    console.log('Final prizeAmount:', prizeAmount);
-    console.log(
-        'noPrize will be:',
-        (matches === 1 && !superMatch) || (matches === 2 && !superMatch) || (matches === 0 && !superMatch)
-    );
 
     // Casos sin premio: 1 acierto sin super, 2 aciertos sin super, o ningún acierto sin super
     const noPrize = (matches === 1 && !superMatch) || (matches === 2 && !superMatch) || (matches === 0 && !superMatch);
@@ -2333,13 +2048,13 @@ function saveToHistory(game, details, isWinner, prize = 0) {
         history.pop();
     }
 
-    localStorage.setItem('validationHistory', JSON.stringify(history));
+    localStorage.setItem('validador-balotos:validationHistory', JSON.stringify(history));
     updateHistoryBadge();
 }
 
 // Obtener historial
 function getHistory() {
-    const stored = localStorage.getItem('validationHistory');
+    const stored = localStorage.getItem('validador-balotos:validationHistory');
     return stored ? JSON.parse(stored) : [];
 }
 
@@ -2349,7 +2064,7 @@ function clearHistory() {
         '¿Borrar todo el historial?',
         'Esta acción no se puede deshacer. Se eliminarán todas las validaciones guardadas.',
         () => {
-            localStorage.removeItem('validationHistory');
+            localStorage.removeItem('validador-balotos:validationHistory');
             updateHistoryBadge();
             renderHistory();
             Toast.success('Historial limpiado', 2500);
@@ -2463,7 +2178,7 @@ function initDarkMode() {
     const html = document.documentElement;
 
     // Cargar tema guardado o usar el del sistema
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('validador-balotos:theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const theme = savedTheme || (prefersDark ? 'dark' : 'light');
 
@@ -2475,7 +2190,7 @@ function initDarkMode() {
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
         html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+        localStorage.setItem('validador-balotos:theme', newTheme);
 
         // Feedback visual
         Toast.info(`Modo ${newTheme === 'dark' ? 'oscuro' : 'claro'} activado`, 2000);

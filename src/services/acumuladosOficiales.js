@@ -1,8 +1,17 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+// Caché TTL para evitar requests repetidos a baloto.com
+let _acumuladosCache = null;
+let _acumuladosCacheExpiresAt = 0;
+const ACUMULADOS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
 // Función para extraer acumulados del sitio oficial baloto.com
 async function getAcumuladosOficiales() {
+    if (_acumuladosCache && Date.now() < _acumuladosCacheExpiresAt) {
+        return _acumuladosCache;
+    }
+
     try {
         const response = await axios.get('https://www.baloto.com/', {
             headers: {
@@ -59,6 +68,8 @@ async function getAcumuladosOficiales() {
             }
         });
 
+        _acumuladosCache = acumulados;
+        _acumuladosCacheExpiresAt = Date.now() + ACUMULADOS_CACHE_TTL_MS;
         return acumulados;
     } catch (error) {
         console.error('Error al obtener acumulados de baloto.com:', error.message);

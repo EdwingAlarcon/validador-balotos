@@ -112,6 +112,15 @@ function getLatestResult(game) {
     return stmt.get(game);
 }
 
+function getResultByGameAndSorteo(game, sorteoId) {
+    const stmt = db.prepare(`
+        SELECT * FROM historical_results
+        WHERE game = ? AND sorteo = ?
+        LIMIT 1
+    `);
+    return stmt.get(game, parseInt(sorteoId));
+}
+
 function getTotalResults(game = null) {
     let query = 'SELECT COUNT(*) as total FROM historical_results';
     const params = [];
@@ -227,6 +236,7 @@ module.exports = {
     getAllResults,
     getResultsByDateRange,
     getLatestResult,
+    getResultByGameAndSorteo,
     getTotalResults,
     getNumberFrequency,
     getSuperBalotaFrequency,
@@ -234,5 +244,4 @@ module.exports = {
     getNumberPairs,
     deleteAllResults,
     closeDatabase,
-    db, // Exportar instancia para consultas personalizadas
 };
