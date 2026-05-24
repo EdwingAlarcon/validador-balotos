@@ -28,6 +28,10 @@ desktop.ini
 *.tmp
 *.temp
 
+# SQLite - archivos temporales WAL
+*.db-shm
+*.db-wal
+
 # Archivos de debug
 tests/baloto-panel-debug.html
 tests/*.html.backup
