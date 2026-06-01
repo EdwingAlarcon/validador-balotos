@@ -39,3 +39,6 @@ tests/*.html.backup
 # Build (si se agrega)
 dist/
 build/
+
+# Playwright MCP (capturas de sesión)
+.playwright-mcp/
