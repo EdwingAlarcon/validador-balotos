@@ -29,7 +29,7 @@ async function scrapeBaloto() {
 
             if (sorteoMatch) {
                 const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim();
+                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
 
                 // Extraer números principales
                 const numeros = [];
@@ -97,7 +97,7 @@ async function scrapeBalotoRevancha() {
             const heading = firstPanel.find('.panel-heading h2').text();
             const sorteoMatch = heading.match(/Baloto.*?(\d+)/i);
             const sorteo = sorteoMatch ? parseInt(sorteoMatch[1]) : null;
-            const fecha = firstPanel.find('time').text().trim();
+            const fecha = firstPanel.find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
 
             const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, revanchaNumbers, revanchaSB);
             if (inserted) {
@@ -138,7 +138,7 @@ async function scrapeMiloto() {
 
             if (sorteoMatch) {
                 const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim();
+                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
 
                 const numeros = [];
                 $(panel)
@@ -190,7 +190,7 @@ async function scrapeColorloto() {
 
             if (sorteoMatch) {
                 const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim();
+                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
 
                 const colorNumberPairs = [];
                 $(panel)

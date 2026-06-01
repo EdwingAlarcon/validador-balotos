@@ -87,7 +87,7 @@ function getAllResults(game = null, limit = 100) {
         params.push(game);
     }
 
-    query += ' ORDER BY fecha DESC LIMIT ?';
+    query += ' ORDER BY sorteo DESC, id DESC LIMIT ?';
     params.push(limit);
 
     const stmt = db.prepare(query);

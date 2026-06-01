@@ -2332,33 +2332,23 @@ let colorlotoHistoricalSorteos = [];
 async function loadHistoricalSorteos() {
     try {
         // Cargar Baloto
-        const balotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Baloto?limit=30`);
+        const [balotoResponse, milotoResponse, colorlotoResponse] = await Promise.all([
+            fetch(`${LOCAL_SERVER_URL}/api/history/Baloto?limit=200`),
+            fetch(`${LOCAL_SERVER_URL}/api/history/Miloto?limit=200`),
+            fetch(`${LOCAL_SERVER_URL}/api/history/Colorloto?limit=200`),
+        ]);
+
         if (balotoResponse.ok) {
             const data = await balotoResponse.json();
-            if (data.success) {
-                balotoHistoricalSorteos = data.sorteos;
-                populateBalotoSelector();
-            }
+            if (data.success) { balotoHistoricalSorteos = data.sorteos; populateBalotoSelector(); }
         }
-
-        // Cargar Miloto
-        const milotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Miloto?limit=30`);
         if (milotoResponse.ok) {
             const data = await milotoResponse.json();
-            if (data.success) {
-                milotoHistoricalSorteos = data.sorteos;
-                populateMilotoSelector();
-            }
+            if (data.success) { milotoHistoricalSorteos = data.sorteos; populateMilotoSelector(); }
         }
-
-        // Cargar Colorloto
-        const colorlotoResponse = await fetch(`${LOCAL_SERVER_URL}/api/history/Colorloto?limit=30`);
         if (colorlotoResponse.ok) {
             const data = await colorlotoResponse.json();
-            if (data.success) {
-                colorlotoHistoricalSorteos = data.sorteos;
-                populateColorlotoSelector();
-            }
+            if (data.success) { colorlotoHistoricalSorteos = data.sorteos; populateColorlotoSelector(); }
         }
     } catch (error) {
         console.error('Error cargando sorteos históricos:', error);
