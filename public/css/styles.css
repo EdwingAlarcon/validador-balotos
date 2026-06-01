@@ -2144,10 +2144,11 @@ kbd {
 
     .confirm-buttons button {
         width: 100%;
-
+    }
+}
 
 /* ========================================
-   ESTAD ÍSTICAS - DASHBOARD
+   ESTADÍSTICAS - DASHBOARD
    ======================================== */
 
 .stats-controls {
