@@ -42,3 +42,7 @@ build/
 
 # Playwright MCP (capturas de sesión)
 .playwright-mcp/
+
+# Logs del servidor
+server.log
+server-error.log
