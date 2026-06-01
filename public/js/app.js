@@ -2355,13 +2355,21 @@ async function loadHistoricalSorteos() {
     }
 }
 
-// Poblar selectores con sorteos
+// Extraer año de un string de fecha como "30 de Mayo de 2026" o "ayer Miércoles 31 de Diciembre de 2025"
+function extractYear(fecha) {
+    const m = (fecha || '').match(/\b(20\d{2})\b/);
+    return m ? parseInt(m[1]) : null;
+}
+
+// Poblar selectores con sorteos del año en curso
 function populateBalotoSelector() {
     const selector = document.getElementById('baloto-sorteo-selector');
     if (!selector) return;
 
-    // Ordenar sorteos de más reciente a más antiguo
-    const sorteosOrdenados = [...balotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+    const currentYear = new Date().getFullYear();
+    const sorteosOrdenados = [...balotoHistoricalSorteos]
+        .filter(s => extractYear(s.fecha) === currentYear)
+        .sort((a, b) => b.sorteo - a.sorteo);
 
     selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
     sorteosOrdenados.forEach(sorteo => {
@@ -2377,8 +2385,10 @@ function populateMilotoSelector() {
     const selector = document.getElementById('miloto-sorteo-selector');
     if (!selector) return;
 
-    // Ordenar sorteos de más reciente a más antiguo
-    const sorteosOrdenados = [...milotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+    const currentYear = new Date().getFullYear();
+    const sorteosOrdenados = [...milotoHistoricalSorteos]
+        .filter(s => extractYear(s.fecha) === currentYear)
+        .sort((a, b) => b.sorteo - a.sorteo);
 
     selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
     sorteosOrdenados.forEach(sorteo => {
@@ -2394,8 +2404,10 @@ function populateColorlotoSelector() {
     const selector = document.getElementById('colorloto-sorteo-selector');
     if (!selector) return;
 
-    // Ordenar sorteos de más reciente a más antiguo
-    const sorteosOrdenados = [...colorlotoHistoricalSorteos].sort((a, b) => b.sorteo - a.sorteo);
+    const currentYear = new Date().getFullYear();
+    const sorteosOrdenados = [...colorlotoHistoricalSorteos]
+        .filter(s => extractYear(s.fecha) === currentYear)
+        .sort((a, b) => b.sorteo - a.sorteo);
 
     selector.innerHTML = '<option value="" style="color: inherit">Seleccionar sorteo...</option>';
     sorteosOrdenados.forEach(sorteo => {

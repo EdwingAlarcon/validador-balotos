@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const db = require('./services/database');
+const { runInitialScraping } = require('./services/initialScraping');
 const { getAcumuladosOficiales } = require('./services/acumuladosOficiales');
 const {
     generateIntelligentBaloto,
@@ -960,6 +961,27 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 ╚════════════════════════════════════════════════════════════╝
     `);
 });
+
+// ========================================
+// SCRAPING AUTOMÁTICO — cada 6 horas
+// ========================================
+const SCRAPING_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 horas
+
+async function autoScrape() {
+    console.log(`[auto-scrape] ${new Date().toLocaleString('es-CO')} — iniciando...`);
+    try {
+        await runInitialScraping();
+        console.log(`[auto-scrape] completado.`);
+    } catch (err) {
+        console.error(`[auto-scrape] error:`, err.message);
+    }
+}
+
+// Primera ejecución 60 s después del arranque para no bloquear el inicio
+setTimeout(() => {
+    autoScrape();
+    setInterval(autoScrape, SCRAPING_INTERVAL_MS);
+}, 60_000).unref();
 
 // Apagado limpio: cierra la BD antes de terminar (evita corrupción SQLite WAL)
 function gracefulShutdown(signal) {
