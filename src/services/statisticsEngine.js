@@ -70,6 +70,50 @@ function computeSumStats(results) {
     return { mean, median, stdDev: Math.sqrt(variance), min: sorted[0], max: sorted[n - 1], sampleSize: n };
 }
 
+function countConsecutivePairs(numbers) {
+    const sorted = [...numbers].sort((a, b) => a - b);
+    let count = 0;
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] - sorted[i - 1] === 1) count++;
+    }
+    return count;
+}
+
+function averageConsecutivePairs(results) {
+    if (results.length === 0) return 0;
+    const total = results.reduce((acc, result) => acc + countConsecutivePairs(parseNumeros(result)), 0);
+    return total / results.length;
+}
+
+function computeEndingDigitFrequency(results) {
+    const freq = {};
+    for (let d = 0; d <= 9; d++) freq[d] = 0;
+    results.forEach(result => {
+        parseNumeros(result).forEach(num => {
+            freq[num % 10]++;
+        });
+    });
+    return freq;
+}
+
+function isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i * i <= n; i++) {
+        if (n % i === 0) return false;
+    }
+    return true;
+}
+
+function countPrimesInResults(results) {
+    let count = 0;
+    results.forEach(result => {
+        parseNumeros(result).forEach(num => {
+            if (isPrime(num)) count++;
+        });
+    });
+    return count;
+}
+
 module.exports = {
     parseNumeros,
     computeFrequency,
@@ -78,4 +122,9 @@ module.exports = {
     computeParityDistribution,
     computeRangeDistribution,
     computeSumStats,
+    countConsecutivePairs,
+    averageConsecutivePairs,
+    computeEndingDigitFrequency,
+    isPrime,
+    countPrimesInResults,
 };
