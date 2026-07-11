@@ -1,7 +1,7 @@
 // Generador congruencial lineal (Lehmer/Park-Miller) — determinístico, suficiente para
 // muestreo sin necesidad de criptografía. No usar para nada sensible a seguridad.
 const db = require('./database');
-const { scorePopularity } = require('./popularityScorer');
+const { scorePopularity, scoreColorlotoPopularity, COLOR_ORDER } = require('./popularityScorer');
 
 function createSeededRandom(seed) {
     let s = seed % 2147483647;
@@ -162,6 +162,71 @@ function buildNumericPortfolio(game, rules, seed = 42) {
     return attachSuperBalotas(portfolio, game, rng);
 }
 
+function randomColorloto(rng) {
+    return COLOR_ORDER.map(color => ({ color, number: Math.floor(rng() * 7) + 1 }));
+}
+
+function colorlotoComboKey(pairs) {
+    return pairs.map(p => `${p.color}:${p.number}`).join(',');
+}
+
+function marginalCoverageColorloto(existingPairsList, candidatePairs) {
+    const coveredKeys = new Set(existingPairsList.flat().map(p => `${p.color}:${p.number}`));
+    return candidatePairs.filter(p => !coveredKeys.has(`${p.color}:${p.number}`)).length;
+}
+
+function generateColorlotoCombo(strategy, rng, existingPairsList) {
+    let best = null;
+    let bestScore = -Infinity;
+    for (let attempt = 0; attempt < MAX_CANDIDATE_ATTEMPTS; attempt++) {
+        const candidate = randomColorloto(rng);
+        const popularity = scoreColorlotoPopularity(candidate);
+
+        if (strategy === 'B' && popularity > 20) continue;
+        if (strategy === 'D' && popularity > 40) continue;
+        if (strategy === 'A' && !isParityBalanced(candidate.map(p => p.number))) continue;
+
+        const marginal = marginalCoverageColorloto(existingPairsList, candidate);
+        const rankScore = strategy === 'C' || strategy === 'D' ? marginal : 0;
+
+        if (best === null || rankScore > bestScore) {
+            best = candidate;
+            bestScore = rankScore;
+        }
+        if (strategy === 'A' || strategy === 'B') break;
+    }
+    return best || randomColorloto(rng);
+}
+
+function buildColorlotoPortfolio(seed = 42) {
+    const rng = createSeededRandom(seed);
+    const strategies = ['A', 'B', 'C', 'D'];
+    const combosPerStrategy = 5;
+    const seenKeys = new Set();
+    const portfolio = [];
+
+    strategies.forEach(strategy => {
+        for (let i = 0; i < combosPerStrategy; i++) {
+            const existing = portfolio.map(c => c.pairs);
+            let combo;
+            let tries = 0;
+            do {
+                combo = generateColorlotoCombo(strategy, rng, existing);
+                tries++;
+            } while (seenKeys.has(colorlotoComboKey(combo)) && tries < 50);
+            seenKeys.add(colorlotoComboKey(combo));
+            portfolio.push({
+                strategy,
+                pairs: combo,
+                popularityScore: scoreColorlotoPopularity(combo),
+                marginalCoverageAtInsertion: marginalCoverageColorloto(existing, combo),
+            });
+        }
+    });
+
+    return portfolio;
+}
+
 module.exports = {
     createSeededRandom,
     randomCombo,
@@ -178,4 +243,9 @@ module.exports = {
     generateCombo,
     attachSuperBalotas,
     buildNumericPortfolio,
+    randomColorloto,
+    colorlotoComboKey,
+    marginalCoverageColorloto,
+    generateColorlotoCombo,
+    buildColorlotoPortfolio,
 };
