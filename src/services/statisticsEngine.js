@@ -114,6 +114,39 @@ function countPrimesInResults(results) {
     return count;
 }
 
+// Aproximación de Abramowitz-Stegun para la CDF normal estándar
+function normalCdf(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989423 * Math.exp((-z * z) / 2);
+    let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    if (z > 0) prob = 1 - prob;
+    return prob;
+}
+
+// Aproximación de Wilson-Hilferty: transforma chi-cuadrado a normal estándar
+function chiSquarePValueApprox(chiSquare, df) {
+    if (df <= 0) return 1;
+    const z = (Math.pow(chiSquare / df, 1 / 3) - (1 - 2 / (9 * df))) / Math.sqrt(2 / (9 * df));
+    return 1 - normalCdf(z);
+}
+
+function chiSquareUniformity(frequency, totalDraws, valuesPerDraw) {
+    const numbers = Object.keys(frequency);
+    const k = numbers.length;
+    const totalObservations = totalDraws * valuesPerDraw;
+    const expected = totalObservations / k;
+    if (expected === 0) {
+        return { chiSquare: 0, degreesOfFreedom: k - 1, pValueApprox: 1, likelyUniform: true };
+    }
+    const chiSquare = numbers.reduce((acc, num) => {
+        const observed = frequency[num];
+        return acc + Math.pow(observed - expected, 2) / expected;
+    }, 0);
+    const degreesOfFreedom = k - 1;
+    const pValueApprox = chiSquarePValueApprox(chiSquare, degreesOfFreedom);
+    return { chiSquare, degreesOfFreedom, pValueApprox, likelyUniform: pValueApprox > 0.05 };
+}
+
 module.exports = {
     parseNumeros,
     computeFrequency,
@@ -127,4 +160,7 @@ module.exports = {
     computeEndingDigitFrequency,
     isPrime,
     countPrimesInResults,
+    normalCdf,
+    chiSquarePValueApprox,
+    chiSquareUniformity,
 };
