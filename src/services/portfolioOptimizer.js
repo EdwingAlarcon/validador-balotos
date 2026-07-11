@@ -245,7 +245,7 @@ function strategicScore({
     return Math.round(popularityComponent + coverageComponent + redundancyComponent + balanceComponent);
 }
 
-function annotatePortfolioScores(portfolio, isColorloto) {
+function annotatePortfolioScores(portfolio, isColorloto, maxNumber = 43) {
     const maxMarginal = Math.max(...portfolio.map(c => c.marginalCoverageAtInsertion), 1);
     portfolio.forEach((combo, idx) => {
         const numbers = isColorloto ? combo.pairs.map(p => p.number) : combo.numbers;
@@ -269,11 +269,53 @@ function annotatePortfolioScores(portfolio, isColorloto) {
             sharedWithOthersAvg: sharedAvg,
             comboLength: numbers.length,
             parityBalanceOk: isParityBalanced(numbers),
-            rangeBalanceOk: isColorloto ? true : isRangeBalanced(numbers, 43),
+            rangeBalanceOk: isColorloto ? true : isRangeBalanced(numbers, maxNumber),
         });
         combo.maxSharedWithAnother = Math.max(...sharedValues);
     });
     return portfolio;
+}
+
+function budgetScenarios(price) {
+    const scenarios = {
+        basico: { apuestas: 5 },
+        moderado: { apuestas: 12 },
+        amplio: { apuestas: 20 },
+    };
+    Object.values(scenarios).forEach(scenario => {
+        scenario.costoUnitario = price;
+        scenario.costoTotal = price * scenario.apuestas;
+    });
+    return scenarios;
+}
+
+function randomControlPortfolio(count, comboLength, maxNumber, seed) {
+    const rng = createSeededRandom(seed);
+    const seen = new Set();
+    const portfolio = [];
+    while (portfolio.length < count) {
+        const combo = randomCombo(comboLength, maxNumber, rng);
+        const key = comboKey(combo);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        portfolio.push(combo);
+    }
+    return portfolio;
+}
+
+function comparePortfolios(optimizedCombos, controlCombos, maxNumber) {
+    return {
+        optimized: {
+            coverage: coverageOf(optimizedCombos).length,
+            coverageRatio: coverageOf(optimizedCombos).length / maxNumber,
+            averageRedundancy: averageRedundancy(optimizedCombos),
+        },
+        control: {
+            coverage: coverageOf(controlCombos).length,
+            coverageRatio: coverageOf(controlCombos).length / maxNumber,
+            averageRedundancy: averageRedundancy(controlCombos),
+        },
+    };
 }
 
 module.exports = {
@@ -299,4 +341,7 @@ module.exports = {
     buildColorlotoPortfolio,
     strategicScore,
     annotatePortfolioScores,
+    budgetScenarios,
+    randomControlPortfolio,
+    comparePortfolios,
 };
