@@ -227,6 +227,55 @@ function buildColorlotoPortfolio(seed = 42) {
     return portfolio;
 }
 
+// Pesos: 0.30 popularidad baja + 0.25 cobertura marginal + 0.20 baja redundancia + 0.25 equilibrio
+function strategicScore({
+    popularityScore,
+    marginalCoverage,
+    maxMarginalCoverage,
+    sharedWithOthersAvg,
+    comboLength,
+    parityBalanceOk,
+    rangeBalanceOk,
+}) {
+    const popularityComponent = (100 - popularityScore) * 0.3;
+    const coverageComponent = (maxMarginalCoverage > 0 ? marginalCoverage / maxMarginalCoverage : 0) * 100 * 0.25;
+    const redundancyRatio = Math.min(100, (sharedWithOthersAvg / comboLength) * 100);
+    const redundancyComponent = (100 - redundancyRatio) * 0.2;
+    const balanceComponent = ((parityBalanceOk ? 50 : 0) + (rangeBalanceOk ? 50 : 0)) * 0.25;
+    return Math.round(popularityComponent + coverageComponent + redundancyComponent + balanceComponent);
+}
+
+function annotatePortfolioScores(portfolio, isColorloto) {
+    const maxMarginal = Math.max(...portfolio.map(c => c.marginalCoverageAtInsertion), 1);
+    portfolio.forEach((combo, idx) => {
+        const numbers = isColorloto ? combo.pairs.map(p => p.number) : combo.numbers;
+        const others = portfolio.filter((_, j) => j !== idx);
+
+        let sharedValues;
+        if (isColorloto) {
+            sharedValues = others.map(o => {
+                const oNumbers = o.pairs.map(p => p.number);
+                return numbers.filter((n, i) => n === oNumbers[i]).length;
+            });
+        } else {
+            sharedValues = others.map(o => sharedCount(numbers, o.numbers));
+        }
+
+        const sharedAvg = sharedValues.reduce((a, b) => a + b, 0) / sharedValues.length;
+        combo.strategicScore = strategicScore({
+            popularityScore: combo.popularityScore,
+            marginalCoverage: combo.marginalCoverageAtInsertion,
+            maxMarginalCoverage: maxMarginal,
+            sharedWithOthersAvg: sharedAvg,
+            comboLength: numbers.length,
+            parityBalanceOk: isParityBalanced(numbers),
+            rangeBalanceOk: isColorloto ? true : isRangeBalanced(numbers, 43),
+        });
+        combo.maxSharedWithAnother = Math.max(...sharedValues);
+    });
+    return portfolio;
+}
+
 module.exports = {
     createSeededRandom,
     randomCombo,
@@ -248,4 +297,6 @@ module.exports = {
     marginalCoverageColorloto,
     generateColorlotoCombo,
     buildColorlotoPortfolio,
+    strategicScore,
+    annotatePortfolioScores,
 };
