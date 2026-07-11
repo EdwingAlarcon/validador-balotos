@@ -152,7 +152,14 @@ function runsTest(binarySequence) {
     const n1 = binarySequence.filter(b => b === 1).length;
     const n0 = n - n1;
     if (n0 === 0 || n1 === 0) {
-        return { runs: 0, expectedRuns: 0, stdDev: 0, zScore: 0, likelyRandom: false, note: 'Secuencia sin variación: la prueba de rachas no aplica.' };
+        return {
+            runs: 0,
+            expectedRuns: 0,
+            stdDev: 0,
+            zScore: 0,
+            likelyRandom: false,
+            note: 'Secuencia sin variación: la prueba de rachas no aplica.',
+        };
     }
     let runs = 1;
     for (let i = 1; i < n; i++) {
