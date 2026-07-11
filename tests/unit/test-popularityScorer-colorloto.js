@@ -4,7 +4,7 @@ const { scoreColorlotoPopularity, COLOR_ORDER } = require('../../src/services/po
 // Secuencia ascendente en el orden del volante: patrón muy reconocible
 const ascending = COLOR_ORDER.map((color, i) => ({ color, number: i + 1 }));
 const ascendingScore = scoreColorlotoPopularity(ascending);
-assert.ok(ascendingScore >= 50, `esperado >=50, obtuvo ${ascendingScore}`);
+assert.ok(ascendingScore >= 25, `esperado >=25, obtuvo ${ascendingScore}`);
 
 // Números dispersos sin patrón
 const dispersed = [

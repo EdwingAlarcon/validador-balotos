@@ -58,7 +58,7 @@ function scoreColorlotoPopularity(pairs) {
     if (isAscendingTicketOrder) score += 30;
 
     // Todos los números <=4 (sesgo hacia números bajos)
-    if (numbers.filter(n => n <= 4).length >= 4) score += 20;
+    if (numbers.every(n => n <= 4)) score += 20;
 
     // Todo par o todo impar
     if (numbers.every(n => n % 2 === 0) || numbers.every(n => n % 2 === 1)) score += 15;
