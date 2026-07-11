@@ -1,5 +1,8 @@
 // Generador congruencial lineal (Lehmer/Park-Miller) — determinístico, suficiente para
 // muestreo sin necesidad de criptografía. No usar para nada sensible a seguridad.
+const db = require('./database');
+const { scorePopularity } = require('./popularityScorer');
+
 function createSeededRandom(seed) {
     let s = seed % 2147483647;
     if (s <= 0) s += 2147483646;
@@ -57,6 +60,108 @@ function averageRedundancy(combos) {
     return pairs === 0 ? 0 : totalShared / pairs;
 }
 
+function isParityBalanced(numbers) {
+    const evens = numbers.filter(n => n % 2 === 0).length;
+    const ratio = evens / numbers.length;
+    return ratio >= 0.3 && ratio <= 0.7;
+}
+
+function isRangeBalanced(numbers, maxNumber) {
+    const third = maxNumber / 3;
+    const buckets = { low: 0, mid: 0, high: 0 };
+    numbers.forEach(n => {
+        if (n <= third) buckets.low++;
+        else if (n <= third * 2) buckets.mid++;
+        else buckets.high++;
+    });
+    const maxBucket = Math.max(buckets.low, buckets.mid, buckets.high);
+    return maxBucket / numbers.length <= 0.6;
+}
+
+function pickWeighted(valuesWithWeights, rng) {
+    const total = valuesWithWeights.reduce((sum, [, weight]) => sum + weight, 0);
+    let r = rng() * total;
+    for (const [value, weight] of valuesWithWeights) {
+        r -= weight;
+        if (r <= 0) return value;
+    }
+    return valuesWithWeights[valuesWithWeights.length - 1][0];
+}
+
+const MAX_CANDIDATE_ATTEMPTS = 500;
+
+function generateCombo(strategy, count, maxNumber, rng, existingCombos) {
+    let best = null;
+    let bestScore = -Infinity;
+    for (let attempt = 0; attempt < MAX_CANDIDATE_ATTEMPTS; attempt++) {
+        const candidate = randomCombo(count, maxNumber, rng);
+        const popularity = scorePopularity(candidate, maxNumber);
+
+        if (strategy === 'B' && popularity > 20) continue;
+        if (strategy === 'D' && popularity > 40) continue;
+        if (strategy === 'A' && !isParityBalanced(candidate)) continue;
+
+        const marginal = marginalCoverage(existingCombos, candidate);
+        const rankScore = strategy === 'C' || strategy === 'D' ? marginal : 0;
+
+        if (best === null || rankScore > bestScore) {
+            best = candidate;
+            bestScore = rankScore;
+        }
+        if (strategy === 'A' || strategy === 'B') break; // primer candidato que cumple es suficiente
+    }
+    return best || randomCombo(count, maxNumber, rng);
+}
+
+function attachSuperBalotas(portfolio, game, rng) {
+    const { LOTTERY_RULES } = require('./lotteryRules');
+    const rules = LOTTERY_RULES[game];
+    if (!rules.superBalota) return portfolio; // Miloto no tiene superbalota
+    const results = db.getAllResults(game, 1000);
+    const freq = {};
+    for (let n = rules.superBalota.min; n <= rules.superBalota.max; n++) freq[n] = 1; // suavizado Laplace
+    results.forEach(r => {
+        const sb = parseInt(r.superBalota, 10);
+        if (sb >= rules.superBalota.min && sb <= rules.superBalota.max) freq[sb]++;
+    });
+    const weighted = Object.entries(freq).map(([n, w]) => [parseInt(n, 10), w]);
+    portfolio.forEach(combo => {
+        combo.superBalota = pickWeighted(weighted, rng);
+    });
+    return portfolio;
+}
+
+function buildNumericPortfolio(game, rules, seed = 42) {
+    const rng = createSeededRandom(seed);
+    const maxNumber = rules.mainNumbers.max;
+    const count = rules.mainNumbers.count;
+    const strategies = ['A', 'B', 'C', 'D'];
+    const combosPerStrategy = 5;
+    const seenKeys = new Set();
+    const portfolio = [];
+
+    strategies.forEach(strategy => {
+        for (let i = 0; i < combosPerStrategy; i++) {
+            const existing = portfolio.map(c => c.numbers);
+            let combo;
+            let tries = 0;
+            do {
+                combo = generateCombo(strategy, count, maxNumber, rng, existing);
+                tries++;
+            } while (seenKeys.has(comboKey(combo)) && tries < 50);
+            seenKeys.add(comboKey(combo));
+            portfolio.push({
+                strategy,
+                numbers: combo,
+                popularityScore: scorePopularity(combo, maxNumber),
+                marginalCoverageAtInsertion: marginalCoverage(existing, combo),
+            });
+        }
+    });
+
+    return attachSuperBalotas(portfolio, game, rng);
+}
+
 module.exports = {
     createSeededRandom,
     randomCombo,
@@ -67,4 +172,10 @@ module.exports = {
     marginalCoverage,
     coverageOf,
     averageRedundancy,
+    isParityBalanced,
+    isRangeBalanced,
+    pickWeighted,
+    generateCombo,
+    attachSuperBalotas,
+    buildNumericPortfolio,
 };
