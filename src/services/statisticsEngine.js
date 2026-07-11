@@ -1,3 +1,6 @@
+const db = require('./database');
+const { LOTTERY_RULES } = require('./lotteryRules');
+
 function parseNumeros(result) {
     return result.numeros.split(',').map(n => parseInt(n.trim(), 10));
 }
@@ -172,6 +175,39 @@ function runsTest(binarySequence) {
     return { runs, expectedRuns, stdDev, zScore, likelyRandom: Math.abs(zScore) < 1.96 };
 }
 
+function getDescriptiveStats(game) {
+    const rules = LOTTERY_RULES[game];
+    if (!rules || !rules.mainNumbers) {
+        throw new Error(`getDescriptiveStats no soporta el juego "${game}"`);
+    }
+    const maxNumber = rules.mainNumbers.max;
+    const results = db.getAllResults(game, 1000);
+    const frequency = computeFrequency(results, maxNumber);
+    const { hot, cold } = computeHotCold(frequency);
+
+    const chronological = [...results].reverse();
+    const parityOfSumSequence = chronological.map(result => {
+        const sum = parseNumeros(result).reduce((a, b) => a + b, 0);
+        return sum % 2 === 0 ? 0 : 1;
+    });
+
+    return {
+        totalSorteos: results.length,
+        frequency,
+        hot,
+        cold,
+        gapsSinceLastAppearance: computeGapsSinceLastAppearance(results, maxNumber),
+        parity: computeParityDistribution(results),
+        rangeDistribution: computeRangeDistribution(results, maxNumber),
+        sumStats: computeSumStats(results),
+        averageConsecutivePairs: averageConsecutivePairs(results),
+        endingDigitFrequency: computeEndingDigitFrequency(results),
+        primesCount: countPrimesInResults(results),
+        chiSquare: chiSquareUniformity(frequency, results.length, rules.mainNumbers.count),
+        runsTest: runsTest(parityOfSumSequence),
+    };
+}
+
 module.exports = {
     parseNumeros,
     computeFrequency,
@@ -189,4 +225,5 @@ module.exports = {
     chiSquarePValueApprox,
     chiSquareUniformity,
     runsTest,
+    getDescriptiveStats,
 };
