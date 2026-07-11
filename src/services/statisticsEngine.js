@@ -147,6 +147,24 @@ function chiSquareUniformity(frequency, totalDraws, valuesPerDraw) {
     return { chiSquare, degreesOfFreedom, pValueApprox, likelyUniform: pValueApprox > 0.05 };
 }
 
+function runsTest(binarySequence) {
+    const n = binarySequence.length;
+    const n1 = binarySequence.filter(b => b === 1).length;
+    const n0 = n - n1;
+    if (n0 === 0 || n1 === 0) {
+        return { runs: 0, expectedRuns: 0, stdDev: 0, zScore: 0, likelyRandom: false, note: 'Secuencia sin variación: la prueba de rachas no aplica.' };
+    }
+    let runs = 1;
+    for (let i = 1; i < n; i++) {
+        if (binarySequence[i] !== binarySequence[i - 1]) runs++;
+    }
+    const expectedRuns = (2 * n0 * n1) / n + 1;
+    const variance = (2 * n0 * n1 * (2 * n0 * n1 - n)) / (n * n * (n - 1));
+    const stdDev = Math.sqrt(Math.max(variance, 0));
+    const zScore = stdDev === 0 ? 0 : (runs - expectedRuns) / stdDev;
+    return { runs, expectedRuns, stdDev, zScore, likelyRandom: Math.abs(zScore) < 1.96 };
+}
+
 module.exports = {
     parseNumeros,
     computeFrequency,
@@ -163,4 +181,5 @@ module.exports = {
     normalCdf,
     chiSquarePValueApprox,
     chiSquareUniformity,
+    runsTest,
 };
