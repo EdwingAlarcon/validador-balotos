@@ -33,9 +33,49 @@ function computeGapsSinceLastAppearance(results, maxNumber) {
     return gaps;
 }
 
+function computeParityDistribution(results) {
+    let even = 0;
+    let odd = 0;
+    results.forEach(result => {
+        parseNumeros(result).forEach(num => {
+            if (num % 2 === 0) even++;
+            else odd++;
+        });
+    });
+    const total = even + odd;
+    return { even, odd, evenRatio: total ? even / total : 0, oddRatio: total ? odd / total : 0 };
+}
+
+function computeRangeDistribution(results, maxNumber) {
+    const third = maxNumber / 3;
+    const dist = { low: 0, mid: 0, high: 0 };
+    results.forEach(result => {
+        parseNumeros(result).forEach(num => {
+            if (num <= third) dist.low++;
+            else if (num <= third * 2) dist.mid++;
+            else dist.high++;
+        });
+    });
+    return dist;
+}
+
+function computeSumStats(results) {
+    const sums = results.map(result => parseNumeros(result).reduce((a, b) => a + b, 0));
+    const n = sums.length;
+    if (n === 0) return { mean: 0, median: 0, stdDev: 0, min: 0, max: 0, sampleSize: 0 };
+    const mean = sums.reduce((a, b) => a + b, 0) / n;
+    const sorted = [...sums].sort((a, b) => a - b);
+    const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[(n - 1) / 2];
+    const variance = sums.reduce((acc, s) => acc + (s - mean) ** 2, 0) / n;
+    return { mean, median, stdDev: Math.sqrt(variance), min: sorted[0], max: sorted[n - 1], sampleSize: n };
+}
+
 module.exports = {
     parseNumeros,
     computeFrequency,
     computeHotCold,
     computeGapsSinceLastAppearance,
+    computeParityDistribution,
+    computeRangeDistribution,
+    computeSumStats,
 };
