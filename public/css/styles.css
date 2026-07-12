@@ -345,8 +345,42 @@ header p {
     align-items: center;
     background: var(--bg-input);
     padding: 10px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 2px solid var(--border-section);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
+}
+
+/* Acento por color: una sola variable por par, heredada por el chip y el input */
+.color-number-pair[data-color='amarillo'] { --chip-accent: #d97706; --chip-glow: rgba(217, 119, 6, 0.35); }
+.color-number-pair[data-color='azul']     { --chip-accent: #1e3a8a; --chip-glow: rgba(37, 99, 235, 0.35); }
+.color-number-pair[data-color='rojo']     { --chip-accent: #991b1b; --chip-glow: rgba(220, 38, 38, 0.35); }
+.color-number-pair[data-color='verde']    { --chip-accent: #15803d; --chip-glow: rgba(22, 163, 74, 0.35); }
+.color-number-pair[data-color='blanco']   { --chip-accent: #94a3b8; --chip-glow: rgba(148, 163, 184, 0.45); }
+.color-number-pair[data-color='negro']    { --chip-accent: #6b7280; --chip-glow: rgba(107, 114, 128, 0.4); }
+
+.color-number-pair:hover {
+    border-color: var(--chip-accent);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+/* Reemplaza el foco genérico del navegador por un acento coherente con el color del par */
+.color-number-pair:focus-within {
+    border-color: var(--chip-accent);
+    box-shadow: 0 0 0 4px var(--chip-glow);
+    transform: translateY(-1px);
+}
+
+/* "Seleccionado": el número ingresado es válido (1-7) */
+.color-number-pair:has(.user-number.valid) {
+    border-color: var(--chip-accent);
+    background: linear-gradient(0deg, var(--chip-glow), var(--chip-glow)), var(--bg-input);
+}
+
+.color-number-pair:has(.user-number:disabled) {
+    opacity: 0.55;
+    filter: grayscale(0.4);
+    pointer-events: none;
 }
 
 .color-select-colorloto {
@@ -378,9 +412,10 @@ header p {
     font-size: 1.2rem;
     text-align: center;
     border: 2px solid var(--border-color);
-    border-radius: 6px;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     font-weight: bold;
+    font-variant-numeric: tabular-nums;
     background: var(--bg-input);
     color: var(--text-primary);
     -moz-appearance: textfield;
@@ -392,10 +427,34 @@ header p {
     margin: 0;
 }
 
+/* El foco toma el acento del color del par (heredado de .color-number-pair) en vez de un azul/rojo genérico */
 .number-input-small:focus {
     outline: none;
-    border-color: var(--border-color-focus);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--chip-accent, var(--border-color-focus));
+    box-shadow: 0 0 0 3px var(--chip-glow, rgba(102, 126, 234, 0.1));
+}
+
+.number-input-small.valid {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.number-input-small.invalid {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    animation: shake 0.3s ease;
+}
+
+.number-input-small.duplicate {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    animation: shake 0.3s ease;
+}
+
+.number-input-small:disabled {
+    cursor: not-allowed;
+    background: var(--bg-section);
+    color: var(--text-muted);
 }
 
 /* Bolas visuales para resultados */
@@ -2641,21 +2700,70 @@ kbd {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     min-width: 90px;
     padding: 6px 12px;
     border-radius: 20px;
     font-weight: 600;
     font-size: 0.85rem;
     color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     user-select: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.colorloto-ball-label.colorloto-amarillo { background: #f0c040; color: #333; text-shadow: none; }
-.colorloto-ball-label.colorloto-azul     { background: #2563eb; }
-.colorloto-ball-label.colorloto-rojo     { background: #dc2626; }
-.colorloto-ball-label.colorloto-verde    { background: #16a34a; }
-.colorloto-ball-label.colorloto-blanco   { background: #e5e7eb; color: #333; text-shadow: none; border: 1px solid #ccc; }
-.colorloto-ball-label.colorloto-negro    { background: #1f2937; }
+
+/* Mismos degradados/bordes que las "bolas" de resultado (.result-ball.colorloto-*), para
+   que el chip del formulario y la bola del sorteo se vean como el mismo lenguaje visual. */
+.colorloto-ball-label.colorloto-amarillo {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1f2937;
+    text-shadow: none;
+    border: 1px solid #d97706;
+}
+.colorloto-ball-label.colorloto-azul {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border: 1px solid #1e3a8a;
+}
+.colorloto-ball-label.colorloto-rojo {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: 1px solid #991b1b;
+}
+.colorloto-ball-label.colorloto-verde {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: 1px solid #15803d;
+}
+.colorloto-ball-label.colorloto-blanco {
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    color: #1e293b;
+    text-shadow: none;
+    border: 1px solid #94a3b8;
+}
+.colorloto-ball-label.colorloto-negro {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    border: 1px solid #4b5563;
+}
+
+.color-number-pair:hover .colorloto-ball-label {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Corrige el bug de contraste: una regla global de modo oscuro (ver más abajo, "REGLAS
+   GLOBALES DE MODO OSCURO") fuerza `color: var(--text-primary)` en prácticamente todo el
+   body y gana por especificidad sobre las reglas de arriba, dejando texto claro sobre fondos
+   claros (Amarillo, y sobre todo Blanco, quedaban ilegibles). Reafirma aquí el mismo color
+   pensado para cada chip, igual que ya se hace para `.result-ball.colorloto-*`. */
+[data-theme='dark'] .colorloto-ball-label.colorloto-amarillo,
+[data-theme='dark'] .colorloto-ball-label.colorloto-blanco {
+    color: #1f2937 !important;
+}
+[data-theme='dark'] .colorloto-ball-label.colorloto-azul,
+[data-theme='dark'] .colorloto-ball-label.colorloto-rojo,
+[data-theme='dark'] .colorloto-ball-label.colorloto-verde,
+[data-theme='dark'] .colorloto-ball-label.colorloto-negro {
+    color: #fff !important;
+}
 
 /* ========================================
    ESTADÍSTICAS — sección y gráficas de barras
