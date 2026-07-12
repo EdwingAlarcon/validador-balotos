@@ -74,7 +74,6 @@ function buildNumericGameReport(game) {
         top5: topFive(combinaciones),
         presupuestos: budgetScenarios(rules.price),
         comparacionControlAleatorio: comparePortfolios(portfolio.map(c => c.numbers), control, rules.mainNumbers.max),
-        _portfolio: portfolio,
     };
 }
 
@@ -106,9 +105,6 @@ function buildFullReport() {
         top5: topFive(colorlotoCombinations),
         presupuestos: budgetScenarios(colorlotoRules.price),
     };
-
-    delete balotoReport._portfolio;
-    delete milotoReport._portfolio;
 
     return {
         resumenEjecutivo:

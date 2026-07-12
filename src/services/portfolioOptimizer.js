@@ -245,6 +245,9 @@ function strategicScore({
     return Math.round(popularityComponent + coverageComponent + redundancyComponent + balanceComponent);
 }
 
+// maxNumber defaults to 43 (Baloto) only for convenience with 2-arg numeric calls;
+// callers for other numeric games (e.g. Miloto, max 39) MUST pass it explicitly —
+// reportBuilder.js always does. isColorloto=true ignores this parameter entirely.
 function annotatePortfolioScores(portfolio, isColorloto, maxNumber = 43) {
     const maxMarginal = Math.max(...portfolio.map(c => c.marginalCoverageAtInsertion), 1);
     portfolio.forEach((combo, idx) => {
