@@ -54,6 +54,13 @@ async function runTests() {
                 method: 'GET',
                 url: `${BASE_URL}/api/colorloto`
             }
+        },
+        {
+            name: 'Portafolio Estratégico',
+            config: {
+                method: 'GET',
+                url: `${BASE_URL}/api/portfolio`
+            }
         }
     ];
     

@@ -15,6 +15,7 @@ const {
     getNumberFrequency,
     MIN_SORTEOS_FOR_STATISTICS,
 } = require('./services/intelligentGenerator');
+const { buildFullReport } = require('./services/reportBuilder');
 
 // ========================================
 // CONFIGURACIÓN DE ENTORNO
@@ -775,6 +776,16 @@ app.get('/api/statistics', (req, res) => {
                 hasEnoughData: colorlotoTotal >= MIN_SORTEOS_FOR_STATISTICS,
             },
         });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Endpoint de portafolio estratégico (Baloto, Revancha, Miloto, Colorloto)
+app.get('/api/portfolio', scrapingLimiter, (req, res) => {
+    try {
+        const report = buildFullReport();
+        res.json({ success: true, report });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
