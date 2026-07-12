@@ -46,3 +46,6 @@ build/
 # Logs del servidor
 server.log
 server-error.log
+
+# Claude Code (config local y worktrees de sesión)
+.claude/
