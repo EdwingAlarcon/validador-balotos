@@ -127,6 +127,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabName === 'estadisticas') {
                 loadStatisticsData();
             }
+            if (tabName === 'portafolio') {
+                loadPortfolioReport();
+            }
 
             // Guardar tab activo en localStorage
             localStorage.setItem('validador-balotos:activeTab', tabName);
@@ -2314,6 +2317,71 @@ async function loadStatisticsData(event) {
         `;
     } catch (e) {
         container.innerHTML = `<p class="helper-text">Error al cargar estadísticas: ${e.message}</p>`;
+    } finally {
+        if (event && event.target) event.target.disabled = false;
+    }
+}
+
+// ========================================
+// PORTAFOLIO ESTRATÉGICO
+// ========================================
+
+async function loadPortfolioReport(event) {
+    if (event && event.target) event.target.disabled = true;
+    const container = document.getElementById('portfolio-container');
+    if (!container) return;
+    container.innerHTML = '<p class="helper-text">Calculando portafolio...</p>';
+
+    try {
+        const res = await fetch(`${LOCAL_SERVER_URL}/api/portfolio`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Error');
+
+        const report = data.report;
+
+        function renderCombinationsTable(combinations, isColorloto) {
+            const rows = combinations
+                .map(c => {
+                    const numerosStr = isColorloto
+                        ? c.pares.map(p => `${p.color}-${p.number}`).join(', ')
+                        : `${c.numeros.join(', ')}${c.superBalota != null ? ' | SB: ' + c.superBalota : ''}`;
+                    return `<tr>
+                        <td>${c.estrategia}</td>
+                        <td>${numerosStr}</td>
+                        <td>${c.puntajeEstrategico}</td>
+                        <td>${c.puntajePopularidad}</td>
+                        <td>${c.sumaNumeros}</td>
+                    </tr>`;
+                })
+                .join('');
+            return `<table class="portfolio-table">
+                <thead><tr><th>Estrategia</th><th>Combinación</th><th>Punt. Estratégico</th><th>Popularidad</th><th>Suma</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        function renderGameSection(name, gameData, isColorloto) {
+            const combinaciones = gameData.combinaciones || gameData.combinacionesReutilizadasDeBaloto || [];
+            return `<div class="portfolio-game-section">
+                <h3>${name}</h3>
+                ${gameData.nota ? `<p class="helper-text">${gameData.nota}</p>` : ''}
+                ${renderCombinationsTable(combinaciones, isColorloto)}
+            </div>`;
+        }
+
+        container.innerHTML = `
+            <p class="helper-text">${report.resumenEjecutivo}</p>
+            ${renderGameSection('Baloto', report.juegos.Baloto, false)}
+            ${renderGameSection('Baloto Revancha', report.juegos['Baloto Revancha'], false)}
+            ${renderGameSection('Miloto', report.juegos.Miloto, false)}
+            ${renderGameSection('Colorloto', report.juegos.Colorloto, true)}
+            <div class="portfolio-game-section">
+                <h3>Advertencia de juego responsable</h3>
+                <p class="helper-text">${report.advertenciaJuegoResponsable}</p>
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = `<p class="helper-text">Error al calcular el portafolio: ${e.message}</p>`;
     } finally {
         if (event && event.target) event.target.disabled = false;
     }

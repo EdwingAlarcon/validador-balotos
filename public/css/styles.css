@@ -3204,3 +3204,25 @@ html[data-theme="dark"] label.radio-option-label span {
     color: #ffffff !important;
 }
 
+.portfolio-game-section {
+    margin-top: 24px;
+}
+
+.portfolio-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+.portfolio-table th,
+.portfolio-table td {
+    border: 1px solid var(--border-color, #ccc);
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.portfolio-table th {
+    background: var(--bg-section, #f0f0f0);
+}
+
