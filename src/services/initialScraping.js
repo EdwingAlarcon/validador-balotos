@@ -142,16 +142,19 @@ function parseColorlotoPanels($) {
 
 async function scrapeBaloto() {
     console.log('1️⃣  Scrapeando Baloto desde resultadobaloto.com...\n');
+    const sourceUrl = 'https://www.resultadobaloto.com/';
+    const startedAt = Date.now();
 
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/', {
+        const response = await axios.get(sourceUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
         });
 
         const $ = cheerio.load(response.data);
+        const parsed = parseBalotoPanels($);
         let scraped = 0;
 
-        parseBalotoPanels($).forEach(({ sorteo, fecha, numeros, superBalota }) => {
+        parsed.forEach(({ sorteo, fecha, numeros, superBalota }) => {
             const inserted = db.insertResult('Baloto', sorteo, fecha, numeros, superBalota);
             if (inserted) {
                 console.log(`  ✅ Baloto #${sorteo} - ${fecha}`);
@@ -161,9 +164,24 @@ async function scrapeBaloto() {
         });
 
         console.log(`\n  📊 Total Baloto scrapeados: ${scraped}\n`);
+        db.logScrapingRun({
+            game: 'Baloto',
+            sourceUrl,
+            status: parsed.length > 0 ? 'ok' : 'no_data',
+            sorteosEncontrados: parsed.length,
+            sorteosInsertados: scraped,
+            durationMs: Date.now() - startedAt,
+        });
         return scraped;
     } catch (error) {
         console.error(`  ❌ Error scrapeando Baloto: ${error.message}\n`);
+        db.logScrapingRun({
+            game: 'Baloto',
+            sourceUrl,
+            status: 'error',
+            durationMs: Date.now() - startedAt,
+            errorMessage: error.message,
+        });
         return 0;
     }
 }
@@ -174,16 +192,19 @@ async function scrapeBaloto() {
 
 async function scrapeBalotoRevancha() {
     console.log('2️⃣  Scrapeando Baloto Revancha desde resultadobaloto.com...\n');
+    const sourceUrl = 'https://www.resultadobaloto.com/';
+    const startedAt = Date.now();
 
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/', {
+        const response = await axios.get(sourceUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
         });
 
         const $ = cheerio.load(response.data);
+        const parsed = parseBalotoRevanchaPanels($);
         let scraped = 0;
 
-        parseBalotoRevanchaPanels($).forEach(({ sorteo, fecha, numeros, superBalota }) => {
+        parsed.forEach(({ sorteo, fecha, numeros, superBalota }) => {
             const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, numeros, superBalota);
             if (inserted) {
                 console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
@@ -193,9 +214,24 @@ async function scrapeBalotoRevancha() {
         });
 
         console.log(`\n  📊 Total Baloto Revancha scrapeados: ${scraped}\n`);
+        db.logScrapingRun({
+            game: 'Baloto Revancha',
+            sourceUrl,
+            status: parsed.length > 0 ? 'ok' : 'no_data',
+            sorteosEncontrados: parsed.length,
+            sorteosInsertados: scraped,
+            durationMs: Date.now() - startedAt,
+        });
         return scraped;
     } catch (error) {
         console.error(`  ❌ Error scrapeando Baloto Revancha: ${error.message}\n`);
+        db.logScrapingRun({
+            game: 'Baloto Revancha',
+            sourceUrl,
+            status: 'error',
+            durationMs: Date.now() - startedAt,
+            errorMessage: error.message,
+        });
         return 0;
     }
 }
@@ -206,16 +242,19 @@ async function scrapeBalotoRevancha() {
 
 async function scrapeMiloto() {
     console.log('3️⃣  Scrapeando Miloto desde resultadobaloto.com...\n');
+    const sourceUrl = 'https://www.resultadobaloto.com/miloto.php';
+    const startedAt = Date.now();
 
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/miloto.php', {
+        const response = await axios.get(sourceUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
         });
 
         const $ = cheerio.load(response.data);
+        const parsed = parseMilotoPanels($);
         let scraped = 0;
 
-        parseMilotoPanels($).forEach(({ sorteo, fecha, numeros }) => {
+        parsed.forEach(({ sorteo, fecha, numeros }) => {
             const inserted = db.insertResult('Miloto', sorteo, fecha, numeros);
             if (inserted) {
                 console.log(`  ✅ Miloto #${sorteo} - ${fecha}`);
@@ -225,9 +264,24 @@ async function scrapeMiloto() {
         });
 
         console.log(`\n  📊 Total Miloto scrapeados: ${scraped}\n`);
+        db.logScrapingRun({
+            game: 'Miloto',
+            sourceUrl,
+            status: parsed.length > 0 ? 'ok' : 'no_data',
+            sorteosEncontrados: parsed.length,
+            sorteosInsertados: scraped,
+            durationMs: Date.now() - startedAt,
+        });
         return scraped;
     } catch (error) {
         console.error(`  ❌ Error scrapeando Miloto: ${error.message}\n`);
+        db.logScrapingRun({
+            game: 'Miloto',
+            sourceUrl,
+            status: 'error',
+            durationMs: Date.now() - startedAt,
+            errorMessage: error.message,
+        });
         return 0;
     }
 }
@@ -238,16 +292,19 @@ async function scrapeMiloto() {
 
 async function scrapeColorloto() {
     console.log('4️⃣  Scrapeando Colorloto desde resultadobaloto.com...\n');
+    const sourceUrl = 'https://www.resultadobaloto.com/colorloto.php';
+    const startedAt = Date.now();
 
     try {
-        const response = await axios.get('https://www.resultadobaloto.com/colorloto.php', {
+        const response = await axios.get(sourceUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
         });
 
         const $ = cheerio.load(response.data);
+        const parsed = parseColorlotoPanels($);
         let scraped = 0;
 
-        parseColorlotoPanels($).forEach(({ sorteo, fecha, pairs }) => {
+        parsed.forEach(({ sorteo, fecha, pairs }) => {
             const numeros = pairs.map(p => `${p.color}-${p.number}`);
             const inserted = db.insertResult('Colorloto', sorteo, fecha, numeros, null, pairs);
             if (inserted) {
@@ -258,9 +315,24 @@ async function scrapeColorloto() {
         });
 
         console.log(`\n  📊 Total Colorloto scrapeados: ${scraped}\n`);
+        db.logScrapingRun({
+            game: 'Colorloto',
+            sourceUrl,
+            status: parsed.length > 0 ? 'ok' : 'no_data',
+            sorteosEncontrados: parsed.length,
+            sorteosInsertados: scraped,
+            durationMs: Date.now() - startedAt,
+        });
         return scraped;
     } catch (error) {
         console.error(`  ❌ Error scrapeando Colorloto: ${error.message}\n`);
+        db.logScrapingRun({
+            game: 'Colorloto',
+            sourceUrl,
+            status: 'error',
+            durationMs: Date.now() - startedAt,
+            errorMessage: error.message,
+        });
         return 0;
     }
 }

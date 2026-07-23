@@ -45,6 +45,27 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_game_sorteo ON historical_results(game, sorteo);
     `);
 
+    // Trazabilidad de cada corrida de scraping: qué fuente se consultó, cuándo,
+    // con qué resultado. No guarda tokens, cookies ni credenciales — solo
+    // metadatos de la corrida (hallazgo BAJO #7 de la auditoría de scraping).
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS scraping_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game TEXT NOT NULL,
+            sourceUrl TEXT NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('ok', 'no_data', 'error')),
+            sorteosEncontrados INTEGER DEFAULT 0,
+            sorteosInsertados INTEGER DEFAULT 0,
+            durationMs INTEGER,
+            errorMessage TEXT,
+            createdAt TEXT DEFAULT (datetime('now'))
+        )
+    `);
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_scraping_log_game ON scraping_log(game);
+        CREATE INDEX IF NOT EXISTS idx_scraping_log_createdAt ON scraping_log(createdAt);
+    `);
+
     migrateUniqueConstraintToGameSorteo();
 
     console.log('✅ Base de datos inicializada correctamente');
@@ -297,6 +318,23 @@ function getNumberPairs(game, limit = null) {
 }
 
 // ========================================
+// TRAZABILIDAD DE SCRAPING
+// ========================================
+
+function logScrapingRun({ game, sourceUrl, status, sorteosEncontrados = 0, sorteosInsertados = 0, durationMs = null, errorMessage = null }) {
+    const stmt = db.prepare(`
+        INSERT INTO scraping_log (game, sourceUrl, status, sorteosEncontrados, sorteosInsertados, durationMs, errorMessage)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(game, sourceUrl, status, sorteosEncontrados, sorteosInsertados, durationMs, errorMessage);
+}
+
+function getRecentScrapingLogs(limit = 50) {
+    const stmt = db.prepare('SELECT * FROM scraping_log ORDER BY id DESC LIMIT ?');
+    return stmt.all(limit);
+}
+
+// ========================================
 // UTILIDADES
 // ========================================
 
@@ -328,4 +366,6 @@ module.exports = {
     getNumberPairs,
     closeDatabase,
     normalizeSuperBalota,
+    logScrapingRun,
+    getRecentScrapingLogs,
 };
