@@ -1,6 +1,13 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const db = require('../services/database');
+const firecrawlClient = require('./firecrawlClient');
+const {
+    OFFICIAL_URLS,
+    parseBalotoListingMarkdown,
+    parseMilotoListingMarkdown,
+    parseColorlotoListingHtml,
+} = require('./officialScraper');
 
 // ========================================
 // PARSERS PUROS (sin I/O) — testeables con fixtures HTML
@@ -137,101 +144,127 @@ function parseColorlotoPanels($) {
 }
 
 // ========================================
-// SCRAPING BALOTO
+// HELPERS COMPARTIDOS
 // ========================================
 
-async function scrapeBaloto() {
-    console.log('1️⃣  Scrapeando Baloto desde resultadobaloto.com...\n');
+// Inserta un lote de sorteos ya parseados y registra la corrida en
+// scraping_log. Común a fuente oficial y de respaldo.
+function insertBalotoLikeRows(game, rows, label) {
+    let scraped = 0;
+    rows.forEach(({ sorteo, fecha, numeros, superBalota }) => {
+        const inserted = db.insertResult(game, sorteo, fecha, numeros, superBalota);
+        if (inserted) {
+            console.log(`  ✅ ${game} #${sorteo} - ${fecha}`);
+            console.log(`     Números: ${numeros.join(', ')}${superBalota ? ' + SB: ' + superBalota : ''}`);
+            scraped++;
+        }
+    });
+    console.log(`\n  📊 Total ${label} scrapeados: ${scraped}\n`);
+    return scraped;
+}
+
+function logRun(game, sourceUrl, startedAt, { status, sorteosEncontrados = 0, sorteosInsertados = 0, errorMessage = null }) {
+    db.logScrapingRun({
+        game,
+        sourceUrl,
+        status,
+        sorteosEncontrados,
+        sorteosInsertados,
+        durationMs: Date.now() - startedAt,
+        errorMessage,
+    });
+}
+
+// ========================================
+// SCRAPING BALOTO / BALOTO REVANCHA
+// Fuente primaria: baloto.com oficial (vía Firecrawl, requiere JS). Si no
+// está configurada la API key, si Firecrawl falla, o si no trae sorteos
+// nuevos, cae a resultadobaloto.com como respaldo.
+// ========================================
+
+async function fetchOfficialBalotoListing() {
+    const data = await firecrawlClient.scrape(OFFICIAL_URLS.balotoListing, { formats: ['markdown'] });
+    return parseBalotoListingMarkdown(data.markdown || '');
+}
+
+async function scrapeBalotoBackup() {
     const sourceUrl = 'https://www.resultadobaloto.com/';
+    const response = await axios.get(sourceUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const $ = cheerio.load(response.data);
+    return { sourceUrl, parsed: parseBalotoPanels($) };
+}
+
+async function scrapeBalotoRevanchaBackup() {
+    const sourceUrl = 'https://www.resultadobaloto.com/';
+    const response = await axios.get(sourceUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const $ = cheerio.load(response.data);
+    return { sourceUrl, parsed: parseBalotoRevanchaPanels($) };
+}
+
+async function scrapeBaloto() {
+    console.log('1️⃣  Scrapeando Baloto...\n');
     const startedAt = Date.now();
 
-    try {
-        const response = await axios.get(sourceUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-        });
-
-        const $ = cheerio.load(response.data);
-        const parsed = parseBalotoPanels($);
-        let scraped = 0;
-
-        parsed.forEach(({ sorteo, fecha, numeros, superBalota }) => {
-            const inserted = db.insertResult('Baloto', sorteo, fecha, numeros, superBalota);
-            if (inserted) {
-                console.log(`  ✅ Baloto #${sorteo} - ${fecha}`);
-                console.log(`     Números: ${numeros.join(', ')} + SB: ${superBalota}`);
-                scraped++;
+    if (firecrawlClient.isConfigured()) {
+        try {
+            const { baloto: parsed } = await fetchOfficialBalotoListing();
+            if (parsed.length > 0) {
+                console.log('  🌐 Fuente: baloto.com (oficial)');
+                const scraped = insertBalotoLikeRows('Baloto', parsed, 'Baloto');
+                logRun('Baloto', OFFICIAL_URLS.balotoListing, startedAt, { status: 'ok', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
+                return scraped;
             }
-        });
+            logRun('Baloto', OFFICIAL_URLS.balotoListing, startedAt, { status: 'no_data' });
+        } catch (error) {
+            console.warn(`  ⚠️  baloto.com oficial falló (${error.message}), usando respaldo resultadobaloto.com\n`);
+            logRun('Baloto', OFFICIAL_URLS.balotoListing, startedAt, { status: 'error', errorMessage: error.message });
+        }
+    }
 
-        console.log(`\n  📊 Total Baloto scrapeados: ${scraped}\n`);
-        db.logScrapingRun({
-            game: 'Baloto',
-            sourceUrl,
-            status: parsed.length > 0 ? 'ok' : 'no_data',
-            sorteosEncontrados: parsed.length,
-            sorteosInsertados: scraped,
-            durationMs: Date.now() - startedAt,
-        });
+    const backupStartedAt = Date.now();
+    try {
+        console.log('  🌐 Fuente: resultadobaloto.com (respaldo)');
+        const { sourceUrl, parsed } = await scrapeBalotoBackup();
+        const scraped = insertBalotoLikeRows('Baloto', parsed, 'Baloto');
+        logRun('Baloto', sourceUrl, backupStartedAt, { status: parsed.length > 0 ? 'ok' : 'no_data', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
         return scraped;
     } catch (error) {
-        console.error(`  ❌ Error scrapeando Baloto: ${error.message}\n`);
-        db.logScrapingRun({
-            game: 'Baloto',
-            sourceUrl,
-            status: 'error',
-            durationMs: Date.now() - startedAt,
-            errorMessage: error.message,
-        });
+        console.error(`  ❌ Error scrapeando Baloto (respaldo): ${error.message}\n`);
+        logRun('Baloto', 'https://www.resultadobaloto.com/', backupStartedAt, { status: 'error', errorMessage: error.message });
         return 0;
     }
 }
 
-// ========================================
-// SCRAPING BALOTO REVANCHA
-// ========================================
-
 async function scrapeBalotoRevancha() {
-    console.log('2️⃣  Scrapeando Baloto Revancha desde resultadobaloto.com...\n');
-    const sourceUrl = 'https://www.resultadobaloto.com/';
+    console.log('2️⃣  Scrapeando Baloto Revancha...\n');
     const startedAt = Date.now();
 
-    try {
-        const response = await axios.get(sourceUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-        });
-
-        const $ = cheerio.load(response.data);
-        const parsed = parseBalotoRevanchaPanels($);
-        let scraped = 0;
-
-        parsed.forEach(({ sorteo, fecha, numeros, superBalota }) => {
-            const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, numeros, superBalota);
-            if (inserted) {
-                console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
-                console.log(`     Números: ${numeros.join(', ')} + SB: ${superBalota}`);
-                scraped++;
+    if (firecrawlClient.isConfigured()) {
+        try {
+            const { revancha: parsed } = await fetchOfficialBalotoListing();
+            if (parsed.length > 0) {
+                console.log('  🌐 Fuente: baloto.com (oficial)');
+                const scraped = insertBalotoLikeRows('Baloto Revancha', parsed, 'Baloto Revancha');
+                logRun('Baloto Revancha', OFFICIAL_URLS.balotoListing, startedAt, { status: 'ok', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
+                return scraped;
             }
-        });
+            logRun('Baloto Revancha', OFFICIAL_URLS.balotoListing, startedAt, { status: 'no_data' });
+        } catch (error) {
+            console.warn(`  ⚠️  baloto.com oficial falló (${error.message}), usando respaldo resultadobaloto.com\n`);
+            logRun('Baloto Revancha', OFFICIAL_URLS.balotoListing, startedAt, { status: 'error', errorMessage: error.message });
+        }
+    }
 
-        console.log(`\n  📊 Total Baloto Revancha scrapeados: ${scraped}\n`);
-        db.logScrapingRun({
-            game: 'Baloto Revancha',
-            sourceUrl,
-            status: parsed.length > 0 ? 'ok' : 'no_data',
-            sorteosEncontrados: parsed.length,
-            sorteosInsertados: scraped,
-            durationMs: Date.now() - startedAt,
-        });
+    const backupStartedAt = Date.now();
+    try {
+        console.log('  🌐 Fuente: resultadobaloto.com (respaldo)');
+        const { sourceUrl, parsed } = await scrapeBalotoRevanchaBackup();
+        const scraped = insertBalotoLikeRows('Baloto Revancha', parsed, 'Baloto Revancha');
+        logRun('Baloto Revancha', sourceUrl, backupStartedAt, { status: parsed.length > 0 ? 'ok' : 'no_data', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
         return scraped;
     } catch (error) {
-        console.error(`  ❌ Error scrapeando Baloto Revancha: ${error.message}\n`);
-        db.logScrapingRun({
-            game: 'Baloto Revancha',
-            sourceUrl,
-            status: 'error',
-            durationMs: Date.now() - startedAt,
-            errorMessage: error.message,
-        });
+        console.error(`  ❌ Error scrapeando Baloto Revancha (respaldo): ${error.message}\n`);
+        logRun('Baloto Revancha', 'https://www.resultadobaloto.com/', backupStartedAt, { status: 'error', errorMessage: error.message });
         return 0;
     }
 }
@@ -241,47 +274,39 @@ async function scrapeBalotoRevancha() {
 // ========================================
 
 async function scrapeMiloto() {
-    console.log('3️⃣  Scrapeando Miloto desde resultadobaloto.com...\n');
-    const sourceUrl = 'https://www.resultadobaloto.com/miloto.php';
+    console.log('3️⃣  Scrapeando Miloto...\n');
     const startedAt = Date.now();
 
-    try {
-        const response = await axios.get(sourceUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-        });
+    if (firecrawlClient.isConfigured()) {
+        try {
+            const data = await firecrawlClient.scrape(OFFICIAL_URLS.milotoListing, { formats: ['markdown'] });
+            const parsed = parseMilotoListingMarkdown(data.markdown || '');
+            if (parsed.length > 0) {
+                console.log('  🌐 Fuente: baloto.com (oficial)');
+                const scraped = insertBalotoLikeRows('Miloto', parsed, 'Miloto');
+                logRun('Miloto', OFFICIAL_URLS.milotoListing, startedAt, { status: 'ok', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
+                return scraped;
+            }
+            logRun('Miloto', OFFICIAL_URLS.milotoListing, startedAt, { status: 'no_data' });
+        } catch (error) {
+            console.warn(`  ⚠️  baloto.com oficial falló (${error.message}), usando respaldo resultadobaloto.com\n`);
+            logRun('Miloto', OFFICIAL_URLS.milotoListing, startedAt, { status: 'error', errorMessage: error.message });
+        }
+    }
 
+    const backupSourceUrl = 'https://www.resultadobaloto.com/miloto.php';
+    const backupStartedAt = Date.now();
+    try {
+        console.log('  🌐 Fuente: resultadobaloto.com (respaldo)');
+        const response = await axios.get(backupSourceUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const $ = cheerio.load(response.data);
         const parsed = parseMilotoPanels($);
-        let scraped = 0;
-
-        parsed.forEach(({ sorteo, fecha, numeros }) => {
-            const inserted = db.insertResult('Miloto', sorteo, fecha, numeros);
-            if (inserted) {
-                console.log(`  ✅ Miloto #${sorteo} - ${fecha}`);
-                console.log(`     Números: ${numeros.join(', ')}`);
-                scraped++;
-            }
-        });
-
-        console.log(`\n  📊 Total Miloto scrapeados: ${scraped}\n`);
-        db.logScrapingRun({
-            game: 'Miloto',
-            sourceUrl,
-            status: parsed.length > 0 ? 'ok' : 'no_data',
-            sorteosEncontrados: parsed.length,
-            sorteosInsertados: scraped,
-            durationMs: Date.now() - startedAt,
-        });
+        const scraped = insertBalotoLikeRows('Miloto', parsed, 'Miloto');
+        logRun('Miloto', backupSourceUrl, backupStartedAt, { status: parsed.length > 0 ? 'ok' : 'no_data', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
         return scraped;
     } catch (error) {
-        console.error(`  ❌ Error scrapeando Miloto: ${error.message}\n`);
-        db.logScrapingRun({
-            game: 'Miloto',
-            sourceUrl,
-            status: 'error',
-            durationMs: Date.now() - startedAt,
-            errorMessage: error.message,
-        });
+        console.error(`  ❌ Error scrapeando Miloto (respaldo): ${error.message}\n`);
+        logRun('Miloto', backupSourceUrl, backupStartedAt, { status: 'error', errorMessage: error.message });
         return 0;
     }
 }
@@ -290,49 +315,55 @@ async function scrapeMiloto() {
 // SCRAPING COLORLOTO
 // ========================================
 
+function insertColorlotoRows(rows) {
+    let scraped = 0;
+    rows.forEach(({ sorteo, fecha, pairs }) => {
+        const numeros = pairs.map(p => `${p.color}-${p.number}`);
+        const inserted = db.insertResult('Colorloto', sorteo, fecha, numeros, null, pairs);
+        if (inserted) {
+            console.log(`  ✅ Colorloto #${sorteo} - ${fecha}`);
+            console.log(`     Combinaciones: ${numeros.join(', ')}`);
+            scraped++;
+        }
+    });
+    console.log(`\n  📊 Total Colorloto scrapeados: ${scraped}\n`);
+    return scraped;
+}
+
 async function scrapeColorloto() {
-    console.log('4️⃣  Scrapeando Colorloto desde resultadobaloto.com...\n');
-    const sourceUrl = 'https://www.resultadobaloto.com/colorloto.php';
+    console.log('4️⃣  Scrapeando Colorloto...\n');
     const startedAt = Date.now();
 
-    try {
-        const response = await axios.get(sourceUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-        });
+    if (firecrawlClient.isConfigured()) {
+        try {
+            const data = await firecrawlClient.scrape(OFFICIAL_URLS.colorlotoListing, { formats: ['html'] });
+            const parsed = parseColorlotoListingHtml(data.html || '');
+            if (parsed.length > 0) {
+                console.log('  🌐 Fuente: baloto.com (oficial)');
+                const scraped = insertColorlotoRows(parsed);
+                logRun('Colorloto', OFFICIAL_URLS.colorlotoListing, startedAt, { status: 'ok', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
+                return scraped;
+            }
+            logRun('Colorloto', OFFICIAL_URLS.colorlotoListing, startedAt, { status: 'no_data' });
+        } catch (error) {
+            console.warn(`  ⚠️  baloto.com oficial falló (${error.message}), usando respaldo resultadobaloto.com\n`);
+            logRun('Colorloto', OFFICIAL_URLS.colorlotoListing, startedAt, { status: 'error', errorMessage: error.message });
+        }
+    }
 
+    const backupSourceUrl = 'https://www.resultadobaloto.com/colorloto.php';
+    const backupStartedAt = Date.now();
+    try {
+        console.log('  🌐 Fuente: resultadobaloto.com (respaldo)');
+        const response = await axios.get(backupSourceUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const $ = cheerio.load(response.data);
         const parsed = parseColorlotoPanels($);
-        let scraped = 0;
-
-        parsed.forEach(({ sorteo, fecha, pairs }) => {
-            const numeros = pairs.map(p => `${p.color}-${p.number}`);
-            const inserted = db.insertResult('Colorloto', sorteo, fecha, numeros, null, pairs);
-            if (inserted) {
-                console.log(`  ✅ Colorloto #${sorteo} - ${fecha}`);
-                console.log(`     Combinaciones: ${numeros.join(', ')}`);
-                scraped++;
-            }
-        });
-
-        console.log(`\n  📊 Total Colorloto scrapeados: ${scraped}\n`);
-        db.logScrapingRun({
-            game: 'Colorloto',
-            sourceUrl,
-            status: parsed.length > 0 ? 'ok' : 'no_data',
-            sorteosEncontrados: parsed.length,
-            sorteosInsertados: scraped,
-            durationMs: Date.now() - startedAt,
-        });
+        const scraped = insertColorlotoRows(parsed);
+        logRun('Colorloto', backupSourceUrl, backupStartedAt, { status: parsed.length > 0 ? 'ok' : 'no_data', sorteosEncontrados: parsed.length, sorteosInsertados: scraped });
         return scraped;
     } catch (error) {
-        console.error(`  ❌ Error scrapeando Colorloto: ${error.message}\n`);
-        db.logScrapingRun({
-            game: 'Colorloto',
-            sourceUrl,
-            status: 'error',
-            durationMs: Date.now() - startedAt,
-            errorMessage: error.message,
-        });
+        console.error(`  ❌ Error scrapeando Colorloto (respaldo): ${error.message}\n`);
+        logRun('Colorloto', backupSourceUrl, backupStartedAt, { status: 'error', errorMessage: error.message });
         return 0;
     }
 }

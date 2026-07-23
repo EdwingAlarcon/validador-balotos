@@ -27,7 +27,9 @@ This is a Node.js/Express web app that validates Colombian lottery tickets (Balo
 - `database.js` — `better-sqlite3` wrapper; single SQLite file at `data/historical.db`. Table: `historical_results` with columns `game`, `sorteo`, `fecha`, `numeros` (comma-separated), `superBalota`, `colorNumberPairs` (JSON). `initDatabase()` is called at server startup.
 - `intelligentGenerator.js` — Position-aware frequency analysis using Walker's Alias Method. Falls back to pure random if fewer than `MIN_SORTEOS_FOR_STATISTICS` (20) draws are in DB. Caches frequency tables for 5 minutes.
 - `acumuladosOficiales.js` — Scrapes current jackpot amounts from `baloto.com`; 10-minute cache. Used as a data enrichment fallback in lottery result endpoints.
-- `initialScraping.js` — One-shot script to seed the DB from `resultadobaloto.com`. Can be `require()`d or run directly.
+- `initialScraping.js` — Seeds/refreshes the DB (called at startup and every 6h by `autoScrape()` in `server.js`). Tries `baloto.com` official (via Firecrawl, only if `FIRECRAWL_API_KEY` is set) first, falls back to `resultadobaloto.com` on failure or if no key is configured. Can be `require()`d or run directly.
+- `officialScraper.js` — Pure parsers for `baloto.com`'s listing pages (Baloto/Revancha share one page, Miloto and Colorloto each have their own). No network I/O.
+- `firecrawlClient.js` — Thin wrapper around the Firecrawl REST API (`POST /v2/scrape`), used because `baloto.com`'s result pages are JS-rendered and `axios`+`cheerio` can't read them directly.
 
 **Frontend:** Single-page app in `public/`. `public/js/app.js` is the main client script (vanilla JS). `public/index.html` is the only page. Must be served through Express — do not open directly in browser (CORS).
 
@@ -55,10 +57,13 @@ Rate limiting: 30 requests per 10 minutes on scraping endpoints.
 
 ## Scraping Details
 
-- Source: `resultadobaloto.com` for draw results; `baloto.com` for current jackpots.
-- HTML cache in-memory: 10-minute TTL per URL, shared across requests.
-- Baloto Revancha numbers are embedded in the same panel as Baloto: indices 5–9 of `.label-baloto` elements, second `.label-comple` as its Súper Balota.
-- Colorloto uses `.circulo` spans with CSS classes (`bolaamarilla`, `bolaazul`, etc.) to identify colors; numbers 1–7.
+- **Primary source**: `baloto.com` (official), read via Firecrawl (`firecrawlClient.js`) since its result pages are JS-rendered. Requires `FIRECRAWL_API_KEY` (see `.env.example`); without it, this path is skipped entirely.
+- **Backup source**: `resultadobaloto.com`, read directly with `axios`+`cheerio` (server-rendered, no JS needed). Used automatically when the official source isn't configured, fails, or returns no data. `baloto.com` is also used directly (non-Firecrawl) for current jackpots in `acumuladosOficiales.js`.
+- Every scraping run (either source) is logged to the `scraping_log` table (`database.js`: `logScrapingRun`/`getRecentScrapingLogs`) — game, source URL, status, counts, duration, error.
+- HTML cache in-memory (backup path only): 10-minute TTL per URL, shared across requests.
+- Backup source: Baloto Revancha numbers are embedded in the same panel as Baloto: indices 5–9 of `.label-baloto` elements, second `.label-comple` as its Súper Balota. Colorloto uses `.circulo` spans with CSS classes (`bolaamarilla`, `bolaazul`, etc.) to identify colors; numbers 1–7.
+- `UNIQUE(game, sorteo)` on `historical_results` (not `fecha` — its text format varies between scraping runs) makes re-scraping idempotent regardless of source.
+- `scripts/backfill-official.js` — manual maintenance tool (not run by the server) to fill historical gaps by fetching individual `baloto.com` detail pages via Firecrawl.
 
 ## Game Rules
 
