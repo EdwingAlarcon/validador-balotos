@@ -2375,11 +2375,16 @@ async function loadPortfolioReport(event) {
 
         const report = data.report;
 
+        const ORDEN_COLORES = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+
         function renderCombinationsTable(combinations, isColorloto) {
             const rows = combinations
                 .map(c => {
                     const numerosStr = isColorloto
-                        ? c.pares.map(p => `${p.color}-${p.number}`).join(', ')
+                        ? [...c.pares]
+                              .sort((a, b) => ORDEN_COLORES.indexOf(a.color) - ORDEN_COLORES.indexOf(b.color))
+                              .map(p => `${p.color}-${p.number}`)
+                              .join(', ')
                         : `${c.numeros.join(', ')}${c.superBalota != null ? ' | SB: ' + c.superBalota : ''}`;
                     return `<tr>
                         <td>${c.estrategia}</td>
