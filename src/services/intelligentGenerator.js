@@ -160,6 +160,56 @@ function getColorlotoColorFrequency() {
     return colorFreq;
 }
 
+// ========================================
+// COBERTURA DE COLORES — Colorloto
+// El tiquete siempre cubre los 6 colores distintos (uno c/u, sin repetir —
+// así es la mecánica oficial). El sorteo, en cambio, son 6 bolas
+// independientes que pueden repetir o saltarse colores. Esto limita en la
+// práctica qué categorías de premio son alcanzables en cada sorteo real,
+// sin importar qué números se hayan elegido.
+// ========================================
+function getColorlotoCoverageStats() {
+    const cacheKey = 'colorloto:coverage';
+    const cached = getCachedFreq(cacheKey);
+    if (cached) return cached;
+
+    const results = db.getAllResults('Colorloto', 1000);
+    const total = results.length;
+    const distribucionColoresDistintos = {};
+    const ausencias = {};
+    COLORS.forEach(c => (ausencias[c] = 0));
+
+    results.forEach(result => {
+        let pairs = [];
+        try {
+            pairs = result.colorNumberPairs ? JSON.parse(result.colorNumberPairs) : [];
+        } catch (e) {
+            pairs = [];
+        }
+        const presentes = new Set(pairs.map(p => (typeof p === 'string' ? p.split('-')[0] : p.color)));
+        const distinct = presentes.size;
+        distribucionColoresDistintos[distinct] = (distribucionColoresDistintos[distinct] || 0) + 1;
+        COLORS.forEach(c => {
+            if (!presentes.has(c)) ausencias[c]++;
+        });
+    });
+
+    const pct = n => (total > 0 ? Math.round((n / total) * 1000) / 10 : 0);
+
+    const stats = {
+        sorteosAnalizados: total,
+        pctSeisColoresDistintos: pct(distribucionColoresDistintos[6] || 0),
+        distribucionColoresDistintos,
+        porColor: COLORS.map(color => ({
+            color,
+            vecesAusente: ausencias[color],
+            pctAusente: pct(ausencias[color]),
+        })),
+    };
+    setCachedFreq(cacheKey, stats);
+    return stats;
+}
+
 // Mantener compatibilidad con endpoint legacy
 function getColorlotoPairFrequency() {
     const colorFreq = getColorlotoColorFrequency();
@@ -300,6 +350,7 @@ module.exports = {
     getNumberFrequency,
     getSuperBalotaFrequency,
     getColorlotoPairFrequency,
+    getColorlotoCoverageStats,
     MIN_SORTEOS_FOR_STATISTICS,
 };
 

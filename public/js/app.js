@@ -2360,11 +2360,33 @@ async function loadPortfolioReport(event) {
             </table>`;
         }
 
+        function renderColorCoverage(cobertura) {
+            if (!cobertura || !cobertura.sorteosAnalizados) return '';
+            const colorLabel = { amarillo: 'Amarillo', azul: 'Azul', rojo: 'Rojo', verde: 'Verde', blanco: 'Blanco', negro: 'Negro' };
+            const filas = cobertura.porColor
+                .map(c => `<tr><td>${colorLabel[c.color] || c.color}</td><td>${c.pctAusente}%</td><td>${c.vecesAusente} / ${cobertura.sorteosAnalizados}</td></tr>`)
+                .join('');
+            return `<div class="portfolio-coverage-note">
+                <p class="helper-text">
+                    ⚠️ Cada tiquete cubre los 6 colores (uno c/u, sin repetir). Pero en el sorteo real, los 6 colores
+                    distintos <strong>solo salieron ${cobertura.pctSeisColoresDistintos}%</strong> de las veces
+                    (${cobertura.sorteosAnalizados} sorteos analizados) — casi siempre el sorteo repite o se salta
+                    algún color, lo que hace que acertar las 6 parejas sea muy poco probable sin importar qué
+                    números elijas. El plan de premios oficial también paga por 3, 4 o 5 aciertos, no solo por 6.
+                </p>
+                <table class="portfolio-table">
+                    <thead><tr><th>Color</th><th>% de sorteos donde faltó</th><th>Sorteos</th></tr></thead>
+                    <tbody>${filas}</tbody>
+                </table>
+            </div>`;
+        }
+
         function renderGameSection(name, gameData, isColorloto) {
             const combinaciones = gameData.combinaciones || gameData.combinacionesReutilizadasDeBaloto || [];
             return `<div class="portfolio-game-section">
                 <h3>${name}</h3>
                 ${gameData.nota ? `<p class="helper-text">${gameData.nota}</p>` : ''}
+                ${isColorloto ? renderColorCoverage(gameData.coberturaColores) : ''}
                 ${renderCombinationsTable(combinaciones, isColorloto)}
             </div>`;
         }

@@ -10,6 +10,7 @@ const {
     comparePortfolios,
     budgetScenarios,
 } = require('./portfolioOptimizer');
+const { getColorlotoCoverageStats } = require('./intelligentGenerator');
 
 const RESPONSIBLE_GAMING_NOTICE =
     'Juega con responsabilidad: destina únicamente dinero que estés dispuesto a perder por completo. ' +
@@ -101,6 +102,7 @@ function buildFullReport() {
     const colorlotoReport = {
         reglas: colorlotoRules,
         calidadDatos: buildDataQualitySection('Colorloto'),
+        coberturaColores: getColorlotoCoverageStats(),
         combinaciones: colorlotoCombinations,
         top5: topFive(colorlotoCombinations),
         presupuestos: budgetScenarios(colorlotoRules.price),
