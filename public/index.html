@@ -332,30 +332,76 @@
 
                     <div class="input-section">
                         <h3>Tus Colores y Números</h3>
+                        <p class="helper-text">
+                            Puedes repetir color (con distinto número) o repetir número (con distinto color) — así
+                            se puede jugar realmente. Solo no se puede repetir la misma pareja color+número.
+                        </p>
                         <div class="colorloto-grid">
                             <div class="color-number-pair" data-color="amarillo">
-                                <span class="colorloto-ball-label colorloto-amarillo">🟡 Amarillo</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="0" aria-label="Número para Amarillo"/>
+                                <select class="user-color color-select-colorloto" data-index="0" aria-label="Color de la pareja 1">
+                                    <option value="amarillo" selected>🟡 Amarillo</option>
+                                    <option value="azul">🔵 Azul</option>
+                                    <option value="rojo">🔴 Rojo</option>
+                                    <option value="verde">🟢 Verde</option>
+                                    <option value="blanco">⚪ Blanco</option>
+                                    <option value="negro">⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="0" aria-label="Número de la pareja 1"/>
                             </div>
                             <div class="color-number-pair" data-color="azul">
-                                <span class="colorloto-ball-label colorloto-azul">🔵 Azul</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="1" aria-label="Número para Azul"/>
+                                <select class="user-color color-select-colorloto" data-index="1" aria-label="Color de la pareja 2">
+                                    <option value="amarillo">🟡 Amarillo</option>
+                                    <option value="azul" selected>🔵 Azul</option>
+                                    <option value="rojo">🔴 Rojo</option>
+                                    <option value="verde">🟢 Verde</option>
+                                    <option value="blanco">⚪ Blanco</option>
+                                    <option value="negro">⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="1" aria-label="Número de la pareja 2"/>
                             </div>
                             <div class="color-number-pair" data-color="rojo">
-                                <span class="colorloto-ball-label colorloto-rojo">🔴 Rojo</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="2" aria-label="Número para Rojo"/>
+                                <select class="user-color color-select-colorloto" data-index="2" aria-label="Color de la pareja 3">
+                                    <option value="amarillo">🟡 Amarillo</option>
+                                    <option value="azul">🔵 Azul</option>
+                                    <option value="rojo" selected>🔴 Rojo</option>
+                                    <option value="verde">🟢 Verde</option>
+                                    <option value="blanco">⚪ Blanco</option>
+                                    <option value="negro">⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="2" aria-label="Número de la pareja 3"/>
                             </div>
                             <div class="color-number-pair" data-color="verde">
-                                <span class="colorloto-ball-label colorloto-verde">🟢 Verde</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="3" aria-label="Número para Verde"/>
+                                <select class="user-color color-select-colorloto" data-index="3" aria-label="Color de la pareja 4">
+                                    <option value="amarillo">🟡 Amarillo</option>
+                                    <option value="azul">🔵 Azul</option>
+                                    <option value="rojo">🔴 Rojo</option>
+                                    <option value="verde" selected>🟢 Verde</option>
+                                    <option value="blanco">⚪ Blanco</option>
+                                    <option value="negro">⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="3" aria-label="Número de la pareja 4"/>
                             </div>
                             <div class="color-number-pair" data-color="blanco">
-                                <span class="colorloto-ball-label colorloto-blanco">⚪ Blanco</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="4" aria-label="Número para Blanco"/>
+                                <select class="user-color color-select-colorloto" data-index="4" aria-label="Color de la pareja 5">
+                                    <option value="amarillo">🟡 Amarillo</option>
+                                    <option value="azul">🔵 Azul</option>
+                                    <option value="rojo">🔴 Rojo</option>
+                                    <option value="verde">🟢 Verde</option>
+                                    <option value="blanco" selected>⚪ Blanco</option>
+                                    <option value="negro">⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="4" aria-label="Número de la pareja 5"/>
                             </div>
                             <div class="color-number-pair" data-color="negro">
-                                <span class="colorloto-ball-label colorloto-negro">⚫ Negro</span>
-                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="5" aria-label="Número para Negro"/>
+                                <select class="user-color color-select-colorloto" data-index="5" aria-label="Color de la pareja 6">
+                                    <option value="amarillo">🟡 Amarillo</option>
+                                    <option value="azul">🔵 Azul</option>
+                                    <option value="rojo">🔴 Rojo</option>
+                                    <option value="verde">🟢 Verde</option>
+                                    <option value="blanco">⚪ Blanco</option>
+                                    <option value="negro" selected>⚫ Negro</option>
+                                </select>
+                                <input type="number" class="number-input-small user-number" min="1" max="7" placeholder="1-7" data-index="5" aria-label="Número de la pareja 6"/>
                             </div>
                         </div>
                     </div>

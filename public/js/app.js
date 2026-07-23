@@ -854,6 +854,9 @@ function clearUserInputs(clearResults = false) {
         input.value = '';
         input.classList.remove('winner', 'loser', 'valid', 'invalid', 'duplicate');
     });
+    document.querySelectorAll('.user-color').forEach(select => {
+        select.classList.remove('duplicate');
+    });
 
     // Limpiar resultados mostrados si se solicita
     if (clearResults) {
@@ -1645,13 +1648,16 @@ function validateMiloto() {
 }
 
 function validateColorloto() {
-    const COLORS_ORDER = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
-    const userColors = COLORS_ORDER;
+    const userColors = [];
     const userNumbers = [];
     const resultColors = [];
     const resultNumbers = [];
 
-    // Leer números del usuario (uno por color fijo)
+    // Leer color y número elegidos por el usuario en cada una de las 6 parejas
+    // (el color puede repetirse entre parejas — así se puede jugar realmente)
+    document.querySelectorAll('.user-color').forEach((select, index) => {
+        userColors[index] = select.value;
+    });
     document.querySelectorAll('.user-number').forEach((input, index) => {
         userNumbers[index] = parseInt(input.value);
     });
@@ -1681,6 +1687,14 @@ function validateColorloto() {
     // Validate numbers are in range 1-7
     if (userNumbers.some(n => n < 1 || n > 7) || resultNumbers.some(n => n < 1 || n > 7)) {
         Toast.warning('Los números deben estar entre 1 y 7', 3000);
+        return;
+    }
+
+    // No se puede repetir la misma pareja color+número dos veces en el tiquete
+    // (sí se puede repetir color solo, o número solo — así es la mecánica real)
+    const userPairKeys = userColors.map((c, i) => `${c}-${userNumbers[i]}`);
+    if (new Set(userPairKeys).size !== userPairKeys.length) {
+        Toast.warning('No puedes repetir la misma pareja color y número. Puedes repetir el color o el número, pero no ambos juntos.', 4000);
         return;
     }
 
@@ -1855,11 +1869,22 @@ function validateMilotoInputs() {
     });
 }
 
-// Validación para Colorloto
+// Validación para Colorloto — el color puede repetirse entre parejas (con
+// distinto número) y el número puede repetirse (con distinto color); solo no
+// se puede repetir la misma pareja color+número dos veces.
 function validateColorlotoInputs() {
-    const numberInputs = document.querySelectorAll('.user-number');
+    const colorSelects = Array.from(document.querySelectorAll('.user-color'));
+    const numberInputs = Array.from(document.querySelectorAll('.user-number'));
 
-    numberInputs.forEach((input) => {
+    colorSelects.forEach((select, index) => {
+        const pair = select.closest('.color-number-pair');
+        if (pair) pair.setAttribute('data-color', select.value);
+        select.classList.remove('duplicate');
+    });
+
+    const pairKeys = colorSelects.map((select, index) => `${select.value}-${numberInputs[index].value}`);
+
+    numberInputs.forEach((input, index) => {
         const value = parseInt(input.value);
         input.classList.remove('valid', 'invalid', 'duplicate');
 
@@ -1869,6 +1894,13 @@ function validateColorlotoInputs() {
 
         if (value < 1 || value > 7) {
             input.classList.add('invalid');
+            return;
+        }
+
+        const isDuplicatePair = pairKeys.filter(k => k === pairKeys[index]).length > 1;
+        if (isDuplicatePair) {
+            input.classList.add('duplicate');
+            colorSelects[index].classList.add('duplicate');
             return;
         }
 
@@ -1980,6 +2012,10 @@ document.querySelectorAll('.user-number').forEach(input => {
     input.addEventListener('input', validateColorlotoInputs);
     input.addEventListener('change', validateColorlotoInputs);
     input.addEventListener('blur', validateColorlotoInputs);
+});
+
+document.querySelectorAll('.user-color').forEach(select => {
+    select.addEventListener('change', validateColorlotoInputs);
 });
 
 // ========================================
