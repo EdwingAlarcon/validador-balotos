@@ -2,11 +2,139 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const db = require('../services/database');
 
-console.log('🚀 INICIANDO SCRAPING INICIAL DE DATOS HISTÓRICOS\n');
-console.log('═══════════════════════════════════════════════════════════════\n');
+// ========================================
+// PARSERS PUROS (sin I/O) — testeables con fixtures HTML
+// Cada uno recibe un objeto cheerio ya cargado y devuelve los sorteos
+// encontrados en la página, sin tocar la base de datos ni la red.
+// ========================================
 
-// Inicializar base de datos
-db.initDatabase();
+function parseBalotoPanels($) {
+    const results = [];
+    $('#listaResultados .panel').each((i, panel) => {
+        const heading = $(panel).find('.panel-heading h2').text();
+        const sorteoMatch = heading.match(/Baloto\s*(\d+)/i);
+        if (!sorteoMatch) return;
+
+        const sorteo = parseInt(sorteoMatch[1]);
+        const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+
+        const numeros = [];
+        $(panel)
+            .find('.label-baloto')
+            .each((j, elem) => {
+                if (numeros.length < 5) {
+                    const num = $(elem).text().trim();
+                    if (num) numeros.push(num);
+                }
+            });
+
+        const superBalota = $(panel).find('.label-comple').first().text().trim();
+
+        if (numeros.length === 5 && superBalota) {
+            results.push({ sorteo, fecha, numeros, superBalota });
+        }
+    });
+    return results;
+}
+
+function parseBalotoRevanchaPanels($) {
+    const results = [];
+    // Recorre TODOS los paneles disponibles (no solo el más reciente) para
+    // poder auto-rellenar sorteos que se hayan perdido entre corridas de scraping.
+    $('#listaResultados .panel').each((i, panel) => {
+        const heading = $(panel).find('.panel-heading h2').text();
+        const sorteoMatch = heading.match(/Baloto.*?(\d+)/i);
+        if (!sorteoMatch) return;
+        const sorteo = parseInt(sorteoMatch[1]);
+
+        // Los segundos 5 números (índices 5-9) son Baloto Revancha
+        const allNumbers = [];
+        $(panel)
+            .find('.label-baloto')
+            .each((j, elem) => {
+                allNumbers.push($(elem).text().trim());
+            });
+
+        const allSuperBalotas = [];
+        $(panel)
+            .find('.label-comple')
+            .each((j, elem) => {
+                allSuperBalotas.push($(elem).text().trim());
+            });
+
+        if (allNumbers.length >= 10 && allSuperBalotas.length >= 2) {
+            const numeros = allNumbers.slice(5, 10);
+            const superBalota = allSuperBalotas[1];
+            const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+            results.push({ sorteo, fecha, numeros, superBalota });
+        }
+    });
+    return results;
+}
+
+function parseMilotoPanels($) {
+    const results = [];
+    $('#listaResultados .panel').each((i, panel) => {
+        const heading = $(panel).find('.panel-heading h2').text();
+        const sorteoMatch = heading.match(/Miloto\s*(\d+)/i);
+        if (!sorteoMatch) return;
+
+        const sorteo = parseInt(sorteoMatch[1]);
+        const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+
+        const numeros = [];
+        $(panel)
+            .find('.label-baloto')
+            .each((j, elem) => {
+                if (numeros.length < 5) {
+                    const num = $(elem).text().trim();
+                    if (num) numeros.push(num);
+                }
+            });
+
+        if (numeros.length === 5) {
+            results.push({ sorteo, fecha, numeros });
+        }
+    });
+    return results;
+}
+
+function parseColorlotoPanels($) {
+    const results = [];
+    $('#listaResultados .panel').each((i, panel) => {
+        const heading = $(panel).find('.panel-heading h2').text();
+        const sorteoMatch = heading.match(/Colorloto\s*(\d+)/i);
+        if (!sorteoMatch) return;
+
+        const sorteo = parseInt(sorteoMatch[1]);
+        const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+
+        const colorNumberPairs = [];
+        $(panel)
+            .find('.circulo')
+            .each((j, elem) => {
+                const classes = $(elem).attr('class') || '';
+                const number = $(elem).text().trim();
+
+                let color = 'desconocido';
+                if (classes.includes('bolaamarilla')) color = 'amarillo';
+                else if (classes.includes('bolaroja')) color = 'rojo';
+                else if (classes.includes('bolaverde')) color = 'verde';
+                else if (classes.includes('bolaazul')) color = 'azul';
+                else if (classes.includes('bolablanca')) color = 'blanco';
+                else if (classes.includes('bolanegra')) color = 'negro';
+
+                if (number && color !== 'desconocido') {
+                    colorNumberPairs.push({ color, number: parseInt(number) });
+                }
+            });
+
+        if (colorNumberPairs.length >= 6) {
+            results.push({ sorteo, fecha, pairs: colorNumberPairs.slice(0, 6) });
+        }
+    });
+    return results;
+}
 
 // ========================================
 // SCRAPING BALOTO
@@ -23,36 +151,12 @@ async function scrapeBaloto() {
         const $ = cheerio.load(response.data);
         let scraped = 0;
 
-        $('#listaResultados .panel').each((i, panel) => {
-            const heading = $(panel).find('.panel-heading h2').text();
-            const sorteoMatch = heading.match(/Baloto\s*(\d+)/i);
-
-            if (sorteoMatch) {
-                const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
-
-                // Extraer números principales
-                const numeros = [];
-                $(panel)
-                    .find('.label-baloto')
-                    .each((j, elem) => {
-                        if (numeros.length < 5) {
-                            const num = $(elem).text().trim();
-                            if (num) numeros.push(num);
-                        }
-                    });
-
-                // Extraer súper balota
-                const superBalota = $(panel).find('.label-comple').first().text().trim();
-
-                if (numeros.length === 5 && superBalota) {
-                    const inserted = db.insertResult('Baloto', sorteo, fecha, numeros, superBalota);
-                    if (inserted) {
-                        console.log(`  ✅ Baloto #${sorteo} - ${fecha}`);
-                        console.log(`     Números: ${numeros.join(', ')} + SB: ${superBalota}`);
-                        scraped++;
-                    }
-                }
+        parseBalotoPanels($).forEach(({ sorteo, fecha, numeros, superBalota }) => {
+            const inserted = db.insertResult('Baloto', sorteo, fecha, numeros, superBalota);
+            if (inserted) {
+                console.log(`  ✅ Baloto #${sorteo} - ${fecha}`);
+                console.log(`     Números: ${numeros.join(', ')} + SB: ${superBalota}`);
+                scraped++;
             }
         });
 
@@ -79,40 +183,12 @@ async function scrapeBalotoRevancha() {
         const $ = cheerio.load(response.data);
         let scraped = 0;
 
-        // Recorre TODOS los paneles disponibles (no solo el más reciente) para
-        // poder auto-rellenar sorteos que se hayan perdido entre corridas de scraping.
-        $('#listaResultados .panel').each((i, panel) => {
-            const heading = $(panel).find('.panel-heading h2').text();
-            const sorteoMatch = heading.match(/Baloto.*?(\d+)/i);
-            if (!sorteoMatch) return;
-            const sorteo = parseInt(sorteoMatch[1]);
-
-            // Los segundos 5 números (índices 5-9) son Baloto Revancha
-            const allNumbers = [];
-            $(panel)
-                .find('.label-baloto')
-                .each((j, elem) => {
-                    allNumbers.push($(elem).text().trim());
-                });
-
-            const allSuperBalotas = [];
-            $(panel)
-                .find('.label-comple')
-                .each((j, elem) => {
-                    allSuperBalotas.push($(elem).text().trim());
-                });
-
-            if (allNumbers.length >= 10 && allSuperBalotas.length >= 2) {
-                const revanchaNumbers = allNumbers.slice(5, 10);
-                const revanchaSB = allSuperBalotas[1];
-                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
-
-                const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, revanchaNumbers, revanchaSB);
-                if (inserted) {
-                    console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
-                    console.log(`     Números: ${revanchaNumbers.join(', ')} + SB: ${revanchaSB}`);
-                    scraped++;
-                }
+        parseBalotoRevanchaPanels($).forEach(({ sorteo, fecha, numeros, superBalota }) => {
+            const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, numeros, superBalota);
+            if (inserted) {
+                console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
+                console.log(`     Números: ${numeros.join(', ')} + SB: ${superBalota}`);
+                scraped++;
             }
         });
 
@@ -139,32 +215,12 @@ async function scrapeMiloto() {
         const $ = cheerio.load(response.data);
         let scraped = 0;
 
-        $('#listaResultados .panel').each((i, panel) => {
-            const heading = $(panel).find('.panel-heading h2').text();
-            const sorteoMatch = heading.match(/Miloto\s*(\d+)/i);
-
-            if (sorteoMatch) {
-                const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
-
-                const numeros = [];
-                $(panel)
-                    .find('.label-baloto')
-                    .each((j, elem) => {
-                        if (numeros.length < 5) {
-                            const num = $(elem).text().trim();
-                            if (num) numeros.push(num);
-                        }
-                    });
-
-                if (numeros.length === 5) {
-                    const inserted = db.insertResult('Miloto', sorteo, fecha, numeros);
-                    if (inserted) {
-                        console.log(`  ✅ Miloto #${sorteo} - ${fecha}`);
-                        console.log(`     Números: ${numeros.join(', ')}`);
-                        scraped++;
-                    }
-                }
+        parseMilotoPanels($).forEach(({ sorteo, fecha, numeros }) => {
+            const inserted = db.insertResult('Miloto', sorteo, fecha, numeros);
+            if (inserted) {
+                console.log(`  ✅ Miloto #${sorteo} - ${fecha}`);
+                console.log(`     Números: ${numeros.join(', ')}`);
+                scraped++;
             }
         });
 
@@ -191,47 +247,13 @@ async function scrapeColorloto() {
         const $ = cheerio.load(response.data);
         let scraped = 0;
 
-        $('#listaResultados .panel').each((i, panel) => {
-            const heading = $(panel).find('.panel-heading h2').text();
-            const sorteoMatch = heading.match(/Colorloto\s*(\d+)/i);
-
-            if (sorteoMatch) {
-                const sorteo = parseInt(sorteoMatch[1]);
-                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
-
-                const colorNumberPairs = [];
-                $(panel)
-                    .find('.circulo')
-                    .each((j, elem) => {
-                        const classes = $(elem).attr('class') || '';
-                        const number = $(elem).text().trim();
-
-                        // Detectar el color basado en la clase CSS
-                        let color = 'desconocido';
-                        if (classes.includes('bolaamarilla')) color = 'amarillo';
-                        else if (classes.includes('bolaroja')) color = 'rojo';
-                        else if (classes.includes('bolaverde')) color = 'verde';
-                        else if (classes.includes('bolaazul')) color = 'azul';
-                        else if (classes.includes('bolablanca')) color = 'blanco';
-                        else if (classes.includes('bolanegra')) color = 'negro';
-
-                        if (number && color !== 'desconocido') {
-                            colorNumberPairs.push({ color, number: parseInt(number) });
-                        }
-                    });
-
-                if (colorNumberPairs.length >= 6) {
-                    // Tomar solo los primeros 6
-                    const pairs = colorNumberPairs.slice(0, 6);
-                    const numeros = pairs.map(p => `${p.color}-${p.number}`);
-
-                    const inserted = db.insertResult('Colorloto', sorteo, fecha, numeros, null, pairs);
-                    if (inserted) {
-                        console.log(`  ✅ Colorloto #${sorteo} - ${fecha}`);
-                        console.log(`     Combinaciones: ${numeros.join(', ')}`);
-                        scraped++;
-                    }
-                }
+        parseColorlotoPanels($).forEach(({ sorteo, fecha, pairs }) => {
+            const numeros = pairs.map(p => `${p.color}-${p.number}`);
+            const inserted = db.insertResult('Colorloto', sorteo, fecha, numeros, null, pairs);
+            if (inserted) {
+                console.log(`  ✅ Colorloto #${sorteo} - ${fecha}`);
+                console.log(`     Combinaciones: ${numeros.join(', ')}`);
+                scraped++;
             }
         });
 
@@ -293,6 +315,9 @@ async function runInitialScraping() {
 
 // Ejecutar si se llama directamente
 if (require.main === module) {
+    console.log('🚀 INICIANDO SCRAPING INICIAL DE DATOS HISTÓRICOS\n');
+    console.log('═══════════════════════════════════════════════════════════════\n');
+    db.initDatabase();
     runInitialScraping()
         .then(() => {
             console.log('🎉 Proceso completado exitosamente\n');
@@ -304,4 +329,10 @@ if (require.main === module) {
         });
 }
 
-module.exports = { runInitialScraping };
+module.exports = {
+    runInitialScraping,
+    parseBalotoPanels,
+    parseBalotoRevanchaPanels,
+    parseMilotoPanels,
+    parseColorlotoPanels,
+};
