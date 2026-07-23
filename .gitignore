@@ -49,3 +49,9 @@ server-error.log
 
 # Claude Code (config local y worktrees de sesión)
 .claude/
+
+# Firecrawl (auditoría, no forma parte del código)
+.firecrawl/
+
+# Respaldos locales de BD
+.backups/

@@ -45,7 +45,90 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_game_sorteo ON historical_results(game, sorteo);
     `);
 
+    migrateUniqueConstraintToGameSorteo();
+
     console.log('✅ Base de datos inicializada correctamente');
+}
+
+// ========================================
+// MIGRACIÓN: UNIQUE(game, sorteo, fecha) -> UNIQUE(game, sorteo)
+// El texto de "fecha" varía de formato entre corridas de scraping
+// (con/sin día de la semana), lo que permitía insertar el mismo
+// sorteo dos veces. El número de sorteo ya es único por juego.
+// ========================================
+function migrateUniqueConstraintToGameSorteo() {
+    const tableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='historical_results'").get();
+    if (!tableSql || !tableSql.sql.includes('UNIQUE(game, sorteo, fecha)')) return;
+
+    const migrate = db.transaction(() => {
+        db.exec(`
+            CREATE TABLE historical_results_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game TEXT NOT NULL CHECK(game IN ('Baloto', 'Baloto Revancha', 'Miloto', 'Colorloto')),
+                sorteo INTEGER,
+                fecha TEXT NOT NULL,
+                numeros TEXT NOT NULL,
+                superBalota TEXT,
+                colorNumberPairs TEXT,
+                createdAt TEXT DEFAULT (datetime('now')),
+                UNIQUE(game, sorteo)
+            )
+        `);
+
+        // Al deduplicar por (game, sorteo), preferir la fila cuya superBalota
+        // ya está bien formada (sin punto decimal) y, en empate, la más reciente.
+        const rows = db
+            .prepare(
+                `SELECT * FROM historical_results
+                 ORDER BY game, sorteo,
+                          (superBalota IS NOT NULL AND superBalota LIKE '%.%') ASC,
+                          id DESC`
+            )
+            .all();
+
+        const insert = db.prepare(`
+            INSERT OR IGNORE INTO historical_results_new
+                (id, game, sorteo, fecha, numeros, superBalota, colorNumberPairs, createdAt)
+            VALUES (@id, @game, @sorteo, @fecha, @numeros, @superBalota, @colorNumberPairs, @createdAt)
+        `);
+        const seen = new Set();
+        rows.forEach(row => {
+            const key = `${row.game}::${row.sorteo}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            insert.run({ ...row, superBalota: normalizeSuperBalota(row.superBalota) });
+        });
+
+        db.exec('DROP TABLE historical_results');
+        db.exec('ALTER TABLE historical_results_new RENAME TO historical_results');
+        db.exec(`
+            CREATE INDEX IF NOT EXISTS idx_game ON historical_results(game);
+            CREATE INDEX IF NOT EXISTS idx_sorteo ON historical_results(sorteo);
+            CREATE INDEX IF NOT EXISTS idx_fecha ON historical_results(fecha);
+            CREATE INDEX IF NOT EXISTS idx_game_fecha ON historical_results(game, fecha);
+            CREATE INDEX IF NOT EXISTS idx_game_sorteo ON historical_results(game, sorteo);
+        `);
+    });
+
+    const before = db.prepare('SELECT COUNT(*) as c FROM historical_results').get().c;
+    migrate();
+    const after = db.prepare('SELECT COUNT(*) as c FROM historical_results').get().c;
+    console.log(`🔧 Migración UNIQUE(game,sorteo) aplicada: ${before} -> ${after} registros (${before - after} duplicados eliminados)`);
+}
+
+// ========================================
+// NORMALIZACIÓN
+// ========================================
+
+// La superBalota llegó históricamente en formatos inconsistentes ("16.0", "7",
+// "07") según la versión del scraper que la insertó. Se normaliza a entero de
+// 2 dígitos con cero a la izquierda para que comparaciones y validaciones de
+// longitud sean consistentes.
+function normalizeSuperBalota(superBalota) {
+    if (superBalota === null || superBalota === undefined || superBalota === '') return null;
+    const n = parseInt(superBalota, 10);
+    if (isNaN(n)) return null;
+    return String(n).padStart(2, '0');
 }
 
 // ========================================
@@ -64,7 +147,7 @@ function insertResult(game, sorteo, fecha, numeros, superBalota = null, colorNum
             sorteo,
             fecha,
             Array.isArray(numeros) ? numeros.join(',') : numeros,
-            superBalota,
+            normalizeSuperBalota(superBalota),
             colorNumberPairs ? JSON.stringify(colorNumberPairs) : null
         );
         return result.changes > 0;
@@ -244,4 +327,5 @@ module.exports = {
     getHotColdNumbers,
     getNumberPairs,
     closeDatabase,
+    normalizeSuperBalota,
 };

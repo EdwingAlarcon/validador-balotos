@@ -77,40 +77,47 @@ async function scrapeBalotoRevancha() {
         });
 
         const $ = cheerio.load(response.data);
-        const firstPanel = $('#listaResultados .panel').eq(0);
+        let scraped = 0;
 
-        // Los segundos 5 números son Baloto Revancha
-        const allNumbers = [];
-        firstPanel.find('.label-baloto').each((i, elem) => {
-            allNumbers.push($(elem).text().trim());
-        });
-
-        const allSuperBalotas = [];
-        firstPanel.find('.label-comple').each((i, elem) => {
-            allSuperBalotas.push($(elem).text().trim());
-        });
-
-        if (allNumbers.length >= 10 && allSuperBalotas.length >= 2) {
-            const revanchaNumbers = allNumbers.slice(5, 10);
-            const revanchaSB = allSuperBalotas[1];
-
-            const heading = firstPanel.find('.panel-heading h2').text();
+        // Recorre TODOS los paneles disponibles (no solo el más reciente) para
+        // poder auto-rellenar sorteos que se hayan perdido entre corridas de scraping.
+        $('#listaResultados .panel').each((i, panel) => {
+            const heading = $(panel).find('.panel-heading h2').text();
             const sorteoMatch = heading.match(/Baloto.*?(\d+)/i);
-            const sorteo = sorteoMatch ? parseInt(sorteoMatch[1]) : null;
-            const fecha = firstPanel.find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+            if (!sorteoMatch) return;
+            const sorteo = parseInt(sorteoMatch[1]);
 
-            const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, revanchaNumbers, revanchaSB);
-            if (inserted) {
-                console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
-                console.log(`     Números: ${revanchaNumbers.join(', ')} + SB: ${revanchaSB}`);
+            // Los segundos 5 números (índices 5-9) son Baloto Revancha
+            const allNumbers = [];
+            $(panel)
+                .find('.label-baloto')
+                .each((j, elem) => {
+                    allNumbers.push($(elem).text().trim());
+                });
+
+            const allSuperBalotas = [];
+            $(panel)
+                .find('.label-comple')
+                .each((j, elem) => {
+                    allSuperBalotas.push($(elem).text().trim());
+                });
+
+            if (allNumbers.length >= 10 && allSuperBalotas.length >= 2) {
+                const revanchaNumbers = allNumbers.slice(5, 10);
+                const revanchaSB = allSuperBalotas[1];
+                const fecha = $(panel).find('time').text().trim().replace(/^(ayer|hoy|antes de ayer)\s+/i, '');
+
+                const inserted = db.insertResult('Baloto Revancha', sorteo, fecha, revanchaNumbers, revanchaSB);
+                if (inserted) {
+                    console.log(`  ✅ Baloto Revancha #${sorteo} - ${fecha}`);
+                    console.log(`     Números: ${revanchaNumbers.join(', ')} + SB: ${revanchaSB}`);
+                    scraped++;
+                }
             }
+        });
 
-            console.log(`\n  📊 Total Baloto Revancha scrapeados: 1\n`);
-            return 1;
-        } else {
-            console.log(`  ⚠️  No se encontraron datos de Baloto Revancha\n`);
-            return 0;
-        }
+        console.log(`\n  📊 Total Baloto Revancha scrapeados: ${scraped}\n`);
+        return scraped;
     } catch (error) {
         console.error(`  ❌ Error scrapeando Baloto Revancha: ${error.message}\n`);
         return 0;
