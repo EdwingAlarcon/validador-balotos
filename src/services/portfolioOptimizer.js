@@ -1,7 +1,8 @@
 // Generador congruencial lineal (Lehmer/Park-Miller) — determinístico, suficiente para
 // muestreo sin necesidad de criptografía. No usar para nada sensible a seguridad.
 const db = require('./database');
-const { scorePopularity, scoreColorlotoPopularity, COLOR_ORDER } = require('./popularityScorer');
+const { scorePopularity, scoreColorlotoPopularity } = require('./popularityScorer');
+const { LOTTERY_RULES } = require('./lotteryRules');
 
 function createSeededRandom(seed) {
     let s = seed % 2147483647;
@@ -114,7 +115,6 @@ function generateCombo(strategy, count, maxNumber, rng, existingCombos) {
 }
 
 function attachSuperBalotas(portfolio, game, rng) {
-    const { LOTTERY_RULES } = require('./lotteryRules');
     const rules = LOTTERY_RULES[game];
     if (!rules.superBalota) return portfolio; // Miloto no tiene superbalota
     const results = db.getAllResults(game, 1000);
@@ -162,8 +162,26 @@ function buildNumericPortfolio(game, rules, seed = 42) {
     return attachSuperBalotas(portfolio, game, rng);
 }
 
+// Colorloto permite repetir color (con distinto número) o repetir número
+// (con distinto color) — solo no se puede repetir la pareja color+número
+// exacta (confirmado en baloto.com/colorloto). Así es también como salen los
+// sorteos reales: rara vez cubren los 6 colores distintos.
+const COLORLOTO_COLORS = LOTTERY_RULES.Colorloto.colors;
+
 function randomColorloto(rng) {
-    return COLOR_ORDER.map(color => ({ color, number: Math.floor(rng() * 7) + 1 }));
+    const pairs = [];
+    const seen = new Set();
+    let attempts = 0;
+    while (pairs.length < 6 && attempts < 500) {
+        attempts++;
+        const color = COLORLOTO_COLORS[Math.floor(rng() * COLORLOTO_COLORS.length)];
+        const number = Math.floor(rng() * 7) + 1;
+        const key = `${color}:${number}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        pairs.push({ color, number });
+    }
+    return pairs;
 }
 
 function colorlotoComboKey(pairs) {

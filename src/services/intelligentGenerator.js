@@ -317,27 +317,47 @@ function generateIntelligentMiloto() {
 
 // ========================================
 // GENERADOR INTELIGENTE DE COLORLOTO
-// • Cada color (6) elige su número (1–7) de forma independiente
-// • Distribución histórica por color, no por par global
+// • 6 parejas (color, número) muestreadas de la frecuencia histórica real de
+//   cada combinación color+número.
+// • El color SÍ puede repetirse (con distinto número) y el número SÍ puede
+//   repetirse (con distinto color) — así es la mecánica real del juego
+//   (confirmado en baloto.com/colorloto) y así es como salen los sorteos:
+//   casi nunca cubren los 6 colores distintos. Solo se evita repetir la
+//   pareja color+número exacta dos veces en el mismo tiquete.
 // ========================================
 function generateIntelligentColorloto() {
     const totalSorteos = db.getTotalResults('Colorloto');
     const useStatistics = totalSorteos >= MIN_SORTEOS_FOR_STATISTICS;
     const confidence = computeConfidence(totalSorteos);
     const pairs = [];
+    const seen = new Set();
 
     if (useStatistics) {
-        const colorFreq = getColorlotoColorFrequency();
-        COLORS.forEach(color => {
-            const nums = Object.keys(colorFreq[color]).map(Number);
-            const weights = nums.map(n => Math.max(colorFreq[color][n], 1));
-            const number = sampleAlias(buildAliasTable(nums, weights));
-            pairs.push({ color, number });
-        });
+        const pairFreq = getColorlotoPairFrequency(); // { "amarillo-1": count, ... } — 42 combinaciones
+        const keys = Object.keys(pairFreq);
+        const weights = keys.map(k => Math.max(pairFreq[k], 1));
+        const table = buildAliasTable(keys, weights);
+
+        let attempts = 0;
+        while (pairs.length < 6 && attempts < 500) {
+            attempts++;
+            const key = sampleAlias(table);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const separatorIndex = key.lastIndexOf('-');
+            pairs.push({ color: key.slice(0, separatorIndex), number: parseInt(key.slice(separatorIndex + 1), 10) });
+        }
     } else {
-        COLORS.forEach(color => {
-            pairs.push({ color, number: Math.floor(Math.random() * 7) + 1 });
-        });
+        let attempts = 0;
+        while (pairs.length < 6 && attempts < 500) {
+            attempts++;
+            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            const number = Math.floor(Math.random() * 7) + 1;
+            const key = `${color}-${number}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            pairs.push({ color, number });
+        }
     }
 
     return { pairs, method: useStatistics ? 'statistical' : 'random', totalSorteos, confidence };
