@@ -916,12 +916,16 @@ app.post('/api/validate-historical', express.json(), (req, res) => {
             };
         } else if (game === 'Colorloto') {
             const historicalPairs = JSON.parse(result.colorNumberPairs);
+            const remainingHistoricalPairs = [...historicalPairs];
             let exactMatches = 0;
 
-            colorNumberPairs.forEach((userPair, index) => {
-                const histPair = historicalPairs[index];
-                if (userPair.color === histPair.color && userPair.number === histPair.number) {
+            colorNumberPairs.forEach(userPair => {
+                const matchIndex = remainingHistoricalPairs.findIndex(
+                    histPair => userPair.color === histPair.color && userPair.number === histPair.number
+                );
+                if (matchIndex !== -1) {
                     exactMatches++;
+                    remainingHistoricalPairs.splice(matchIndex, 1);
                 }
             });
 

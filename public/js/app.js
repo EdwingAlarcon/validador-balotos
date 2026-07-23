@@ -2682,8 +2682,12 @@ async function loadHistoricalColorlotoResult(sorteoId) {
             const ballsDisplay = document.getElementById('colorloto-results-display');
             if (ballsDisplay && data.sorteo.colorNumberPairs) {
                 const balls = ballsDisplay.querySelectorAll('.result-ball');
+                const colorOrder = ['amarillo', 'azul', 'rojo', 'verde', 'blanco', 'negro'];
+                const sortedPairs = [...data.sorteo.colorNumberPairs].sort(
+                    (a, b) => colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color)
+                );
 
-                data.sorteo.colorNumberPairs.forEach((pair, index) => {
+                sortedPairs.forEach((pair, index) => {
                     if (balls[index]) {
                         balls[index].className = 'result-ball';
                         balls[index].classList.add(`colorloto-${pair.color}`);

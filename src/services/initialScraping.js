@@ -205,8 +205,8 @@ async function scrapeColorloto() {
                         else if (classes.includes('bolaroja')) color = 'rojo';
                         else if (classes.includes('bolaverde')) color = 'verde';
                         else if (classes.includes('bolaazul')) color = 'azul';
-                        else if (classes.includes('bolacafe')) color = 'cafe';
-                        else if (classes.includes('bolanaranja')) color = 'naranja';
+                        else if (classes.includes('bolablanca')) color = 'blanco';
+                        else if (classes.includes('bolanegra')) color = 'negro';
 
                         if (number && color !== 'desconocido') {
                             colorNumberPairs.push({ color, number: parseInt(number) });
